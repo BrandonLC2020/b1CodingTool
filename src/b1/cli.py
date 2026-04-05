@@ -3,6 +3,8 @@ from rich.console import Console
 
 from b1.commands.init import init_cmd
 from b1.commands.install import install_cmd
+from b1.commands.pull import pull_cmd
+from b1.commands.push import push_cmd
 
 app = typer.Typer(
     name="b1",
@@ -14,6 +16,8 @@ console = Console()
 
 app.command(name="init")(init_cmd)
 app.command(name="install")(install_cmd)
+app.command(name="pull")(pull_cmd)
+app.command(name="push")(push_cmd)
 
 def main():
     app()
