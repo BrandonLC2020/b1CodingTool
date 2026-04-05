@@ -8,3 +8,6 @@ __pycache__/
 # Node
 dashboard/node_modules/
 dashboard/dist/
+# Test artifacts
+init/
+mock-module/
