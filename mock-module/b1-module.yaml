@@ -1,0 +1,11 @@
+name: mock-module
+version: 1.0.0
+type: development
+description: A mock module for testing skills and commands integration.
+skills:
+  - name: Setup Mock Database
+    description: Simulates setting up a DB
+    install_command: "echo 'Mock DB Setup' && sleep 1"
+  - name: Install Dependencies
+    description: Simulates npm install
+    install_command: "echo 'Installing Dependencies...'"

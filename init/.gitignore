@@ -1,0 +1,8 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# b1CodingTool
+# Add any temp directories here
