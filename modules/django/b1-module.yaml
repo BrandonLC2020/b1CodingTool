@@ -1,0 +1,6 @@
+name: django
+version: 1.0.0
+type: development
+description: "Coding conventions, best practices, and project structure guidelines for Django development."
+skills: []
+hooks: {}
