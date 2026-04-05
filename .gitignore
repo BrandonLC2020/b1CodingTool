@@ -1,1 +1,10 @@
-*.env
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+.python-version
+
+# Node
+dashboard/node_modules/
+dashboard/dist/
