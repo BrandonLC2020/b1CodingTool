@@ -11,3 +11,7 @@ dashboard/dist/
 # Test artifacts
 init/
 mock-module/
+
+# Claude Code — local settings only; everything else in .claude/ is version-controlled
+.claude/settings.local.json
+.claude/worktrees/
