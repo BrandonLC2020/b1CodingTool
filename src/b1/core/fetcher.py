@@ -21,7 +21,7 @@ class ModuleFetcher:
                 return local_path
                 
         # If it looks like a Git URL
-        if source.startswith("http") or source.startswith("git@"):
+        if source.startswith("http") or source.startswith("git@") or source.startswith("file://"):
             module_name = source.split("/")[-1].replace(".git", "")
             target_path = self.cache_dir / module_name
             
