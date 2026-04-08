@@ -1,0 +1,68 @@
+# tests/integration/test_init_cmd.py
+from pathlib import Path
+from typer.testing import CliRunner
+from b1.cli import app
+
+runner = CliRunner()
+
+
+def test_init_creates_agent_directory(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["init"])
+    assert result.exit_code == 0
+    assert (tmp_path / ".agent").is_dir()
+
+
+def test_init_creates_docs_directory(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    runner.invoke(app, ["init"])
+    assert (tmp_path / "docs").is_dir()
+
+
+def test_init_creates_agent_md(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    runner.invoke(app, ["init"])
+    assert (tmp_path / "agent.md").exists()
+
+
+def test_init_creates_project_agent_md(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    runner.invoke(app, ["init"])
+    assert (tmp_path / ".agent" / "project" / "agent.md").exists()
+
+
+def test_init_creates_gitignore(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    runner.invoke(app, ["init"])
+    assert (tmp_path / ".gitignore").exists()
+
+
+def test_init_creates_readme(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    runner.invoke(app, ["init"])
+    assert (tmp_path / "README.md").exists()
+
+
+def test_init_is_idempotent(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / ".gitignore").write_text("custom", encoding="utf-8")
+    runner.invoke(app, ["init"])
+    runner.invoke(app, ["init"])
+    assert (tmp_path / ".gitignore").read_text(encoding="utf-8") == "custom"
+
+
+def test_init_with_path_argument_creates_subdirectory(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "my-project"
+    target.mkdir()
+    result = runner.invoke(app, ["init", str(target)])
+    assert result.exit_code == 0
+    assert (target / ".agent").is_dir()
+
+
+def test_init_creates_directory_if_it_does_not_exist(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    new_dir = tmp_path / "brand-new"
+    result = runner.invoke(app, ["init", str(new_dir)])
+    assert result.exit_code == 0
+    assert new_dir.is_dir()
