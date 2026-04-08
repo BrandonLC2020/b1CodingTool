@@ -9,6 +9,9 @@ __pycache__/
 dashboard/node_modules/
 dashboard/dist/
 # Test artifacts
+.coverage
+htmlcov/
+.pytest_cache/
 init/
 mock-module/
 
