@@ -7,6 +7,7 @@ from b1.commands.pull import pull_cmd
 from b1.commands.push import push_cmd
 from b1.commands.pair import pair_cmd
 from b1.commands.dashboard import dashboard_cmd
+from b1.commands.link_clickup import link_clickup_cmd
 
 app = typer.Typer(
     name="b1",
@@ -22,6 +23,7 @@ app.command(name="pull")(pull_cmd)
 app.command(name="push")(push_cmd)
 app.command(name="pair")(pair_cmd)
 app.command(name="dashboard")(dashboard_cmd)
+app.command(name="link-to-clickup-list")(link_clickup_cmd)
 
 def main():
     app()
