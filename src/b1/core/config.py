@@ -7,6 +7,9 @@ class B1Config(BaseModel):
     upstream_repo: str = ""
     active_agents: List[str] = Field(default_factory=list)
     clickup_list_id: Optional[str] = None
+    github_owner: Optional[str] = None
+    github_repo: Optional[str] = None
+    default_branch: Optional[str] = None
     
     @classmethod
     def load(cls, project_dir: Path) -> "B1Config":

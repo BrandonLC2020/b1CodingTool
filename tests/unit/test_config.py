@@ -63,3 +63,16 @@ def test_config_serialization_with_clickup_id(tmp_path):
     loaded = B1Config.load(tmp_path)
     assert loaded.clickup_list_id == "123456789"
 
+
+def test_config_serialization_with_github_fields():
+    from b1.core.config import B1Config
+    config = B1Config(
+        github_owner="brandon",
+        github_repo="b1CodingTool",
+        default_branch="main"
+    )
+    dump = config.model_dump()
+    assert dump["github_owner"] == "brandon"
+    assert dump["github_repo"] == "b1CodingTool"
+    assert dump["default_branch"] == "main"
+
