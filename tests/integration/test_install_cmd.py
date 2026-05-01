@@ -50,6 +50,21 @@ def test_install_exits_with_error_outside_initialized_project(tmp_path, monkeypa
     assert result.exit_code != 0
 
 
+def test_install_link_creates_symlink(tmp_path, monkeypatch, make_project):
+    project = make_project()
+    monkeypatch.chdir(project)
+    src = _make_module_source(tmp_path / "src")
+
+    with patch("b1.commands.install.ModuleFetcher") as MockFetcher:
+        MockFetcher.return_value.fetch.return_value = src
+        result = runner.invoke(app, ["install", str(src), "--link"])
+
+    assert result.exit_code == 0
+    target = project / ".agent" / "modules" / "django"
+    assert target.is_symlink()
+    assert target.resolve() == src.resolve()
+
+
 def test_install_exits_with_error_for_invalid_source(tmp_path, monkeypatch, make_project):
     project = make_project()
     monkeypatch.chdir(project)

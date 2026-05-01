@@ -8,7 +8,8 @@ from b1.core.installer import ModuleInstaller
 console = Console()
 
 def install_cmd(
-    source: str = typer.Argument(..., help="Git URL or local path to module target")
+    source: str = typer.Argument(..., help="Git URL or local path to module target"),
+    link: bool = typer.Option(False, "--link", "-l", help="Symlink the module instead of copying (useful for development)")
 ):
     """
     Equips the current project workspace with a specific development or deployment module.
@@ -23,7 +24,7 @@ def install_cmd(
     
     try:
         module_path = fetcher.fetch(source)
-        installer.install(module_path)
+        installer.install(module_path, link=link)
     except Exception as e:
         console.print(f"[bold red]Installation Error:[/bold red] {e}")
         raise typer.Exit(1)

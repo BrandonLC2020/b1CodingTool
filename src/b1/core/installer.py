@@ -1,5 +1,6 @@
 import shutil
 import subprocess
+import os
 from pathlib import Path
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -14,7 +15,7 @@ class ModuleInstaller:
         self.modules_dir = self.project_dir / ".agent" / "modules"
         self.modules_dir.mkdir(parents=True, exist_ok=True)
         
-    def install(self, source_path: Path):
+    def install(self, source_path: Path, link: bool = False):
         # Locate the yaml file
         yaml_path = source_path / "b1-module.yaml"
         if not yaml_path.exists():
@@ -23,18 +24,32 @@ class ModuleInstaller:
                 raise FileNotFoundError(f"No b1-module.yaml or module.yaml found in {source_path}")
                 
         config = ModuleConfig.from_yaml(yaml_path)
-        console.print(f"\\n[bold green]Installing Module:[/bold green] {config.name} (v{config.version})")
+        
+        mode_str = " (symlinked)" if link else ""
+        console.print(f"\\n[bold green]Installing Module:[/bold green] {config.name} (v{config.version}){mode_str}")
         
         target_mod_dir = self.modules_dir / config.name
         
-        # 1. Copy files
+        # 1. Prepare target
         if target_mod_dir.exists():
             console.print(f"[yellow]Module {config.name} already installed. Overwriting...[/yellow]")
-            shutil.rmtree(target_mod_dir)
+            if target_mod_dir.is_symlink():
+                target_mod_dir.unlink()
+            else:
+                shutil.rmtree(target_mod_dir)
             
-        # Ignore .git folder when copying
-        shutil.copytree(source_path, target_mod_dir, ignore=shutil.ignore_patterns('.git', '__pycache__'))
-        console.print(f"[green]\u2714[/green] Copied files to [blue]{target_mod_dir.relative_to(self.project_dir)}[/blue]")
+        if link:
+            # Create a relative symlink if possible, or absolute if not
+            try:
+                os.symlink(source_path.resolve(), target_mod_dir)
+                console.print(f"[green]\u2714[/green] Created symlink to [blue]{source_path}[/blue]")
+            except Exception as e:
+                console.print(f"[bold red]Failed to create symlink:[/bold red] {e}")
+                raise
+        else:
+            # Copy files (Ignore .git folder when copying)
+            shutil.copytree(source_path, target_mod_dir, ignore=shutil.ignore_patterns('.git', '__pycache__'))
+            console.print(f"[green]\u2714[/green] Copied files to [blue]{target_mod_dir.relative_to(self.project_dir)}[/blue]")
         
         # 2. Run skill setup scripts
         if config.skills:
