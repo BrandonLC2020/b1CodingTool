@@ -1,12 +1,15 @@
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from rich.console import Console
+
+from b1.core.config import B1Config
 
 console = Console()
 
 class ContextCompiler:
-    def __init__(self, project_dir: Path):
+    def __init__(self, project_dir: Path, config: Optional[B1Config] = None):
         self.project_dir = project_dir
+        self.config = config
         
     def compile(self) -> str:
         """
@@ -15,6 +18,15 @@ class ContextCompiler:
         """
         combined = []
         
+        # 0. GitHub Metadata
+        if self.config and self.config.github_owner and self.config.github_repo:
+            combined.append("<!-- b1CodingTool: GitHub Repository -->\n")
+            combined.append("# GitHub Repository\n")
+            combined.append(f"- URL: https://github.com/{self.config.github_owner}/{self.config.github_repo}\n")
+            if self.config.default_branch:
+                combined.append(f"- Default Branch: {self.config.default_branch}\n")
+            combined.append("\n\n")
+
         # 1. Root agent.md
         root_agent = self.project_dir / "agent.md"
         if root_agent.exists():

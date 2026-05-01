@@ -28,7 +28,7 @@ def pair_cmd():
         config.save(project_dir)
         console.print(f"[dim]Saved active agents to config: {', '.join(agents)}[/dim]")
         
-    compiler = ContextCompiler(project_dir)
+    compiler = ContextCompiler(project_dir, config=config)
     translator = AgentTranslator(project_dir)
     
     console.print("[bold blue]Compiling contexts...[/bold blue]")

@@ -65,3 +65,17 @@ def test_compile_handles_missing_modules_dir_gracefully(tmp_path):
     # no modules dir at all
     result = ContextCompiler(tmp_path).compile()
     assert "Root" in result
+
+
+def test_compile_includes_github_metadata(tmp_path):
+    from b1.core.config import B1Config
+    from b1.core.compiler import ContextCompiler
+    config = B1Config(
+        github_owner="brandon",
+        github_repo="b1CodingTool",
+        default_branch="main"
+    )
+    result = ContextCompiler(tmp_path, config=config).compile()
+    assert "<!-- b1CodingTool: GitHub Repository -->" in result
+    assert "https://github.com/brandon/b1CodingTool" in result
+    assert "Default Branch: main" in result
