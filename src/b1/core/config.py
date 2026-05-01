@@ -1,11 +1,12 @@
 from pydantic import BaseModel, Field
 import yaml
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 class B1Config(BaseModel):
     upstream_repo: str = ""
     active_agents: List[str] = Field(default_factory=list)
+    clickup_list_id: Optional[str] = None
     
     @classmethod
     def load(cls, project_dir: Path) -> "B1Config":

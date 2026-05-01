@@ -54,3 +54,12 @@ def test_save_overwrites_existing_config(tmp_path):
     data = yaml.safe_load((tmp_path / ".agent" / "config.yaml").read_text(encoding="utf-8"))
     assert data["upstream_repo"] == "new"
     assert data["active_agents"] == ["GEMINI"]
+
+
+def test_config_serialization_with_clickup_id(tmp_path):
+    config = B1Config(upstream_repo="test", clickup_list_id="123456789")
+    config.save(tmp_path)
+    
+    loaded = B1Config.load(tmp_path)
+    assert loaded.clickup_list_id == "123456789"
+
