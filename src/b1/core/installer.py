@@ -26,7 +26,7 @@ class ModuleInstaller:
         config = ModuleConfig.from_yaml(yaml_path)
         
         mode_str = " (symlinked)" if link else ""
-        console.print(f"\\n[bold green]Installing Module:[/bold green] {config.name} (v{config.version}){mode_str}")
+        console.print(f"\n[bold green]Installing Module:[/bold green] {config.name} (v{config.version}){mode_str}")
         
         target_mod_dir = self.modules_dir / config.name
         
@@ -110,9 +110,9 @@ class ModuleInstaller:
                     os.chmod(script_path, 0o755)
 
                     subprocess.run(
-                        str(script_path), 
+                        [str(script_path)], 
                         cwd=self.project_dir, # Run hooks from project root
-                        shell=True, 
+                        shell=False, 
                         text=True, 
                         capture_output=True,
                         check=True
@@ -122,5 +122,8 @@ class ModuleInstaller:
                     progress.update(task, description=f"[yellow]⚠[/yellow] {name} hook script not found: {command}")
             except subprocess.CalledProcessError as e:
                 progress.update(task, description=f"[red]✖[/red] {name} hook failed")
-                console.print(f"[red]Error Output:[/red]\n{e.stderr}")
+                if e.stdout:
+                    console.print(f"[dim]Output:[/dim]\n{e.stdout}")
+                if e.stderr:
+                    console.print(f"[red]Error Output:[/red]\n{e.stderr}")
 
