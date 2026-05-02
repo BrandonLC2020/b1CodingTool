@@ -1,13 +1,9 @@
 name: swift
 version: 1.0.0
-type: technology
+type: development
 description: "Core Swift language standards, SPM project structure, and safe concurrency guidelines."
 skills:
-  - id: swift-test-gen
-    name: "Swift Test Generator"
+  - name: "Swift Test Generator"
     description: "Automated XCTest suite generation for Swift functions."
-  - id: swift-concurrency-refactor
-    name: "Concurrency Refactor"
+  - name: "Concurrency Refactor"
     description: "Assist in transitioning completion-handlers to async/await."
-hooks:
-  post-install: "scripts/post-install.sh"
