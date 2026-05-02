@@ -63,7 +63,68 @@ It contains app logic, directory structures, and active tasks.
 - `ContextCompiler` assembles content in order: root `agent.md` → `.agent/project/agent.md` → each installed module's `context/*.md` files.
 
 ## Architecture Notes
-- Follow the guidelines specified in the root `agent.md`.\n\n<!-- b1CodingTool: Module Context [flutter] - best-practices.md -->\n# Flutter: Best Practices
+- Follow the guidelines specified in the root `agent.md`.\n\n<!-- b1CodingTool: Module Context [xcode] - best-practices.md -->\n# Xcode: Best Practices
+
+## Modularity
+- **Micro-features:** Organize the app into modular components: `Feature`, `Domain`, `Core`, and `Foundation`.
+- **Interface Targets:** Use separate interface targets for large modules to minimize build dependencies.
+
+## Build Settings
+- **XCConfigs:** Use `.xcconfig` files for build settings that vary by environment (e.g., Debug vs. Release).
+- **Hardcoding:** Avoid hardcoding paths or flags in `Project.swift` if they can be handled via xcconfigs.
+
+## Dependency Management
+- **SPM Integration:** Link SPM packages via the `dependencies` array in `Project.swift`.
+- **Internal Dependencies:** Use target references for dependencies between internal modules.\n\n<!-- b1CodingTool: Module Context [xcode] - conventions.md -->\n# Xcode: Coding Conventions
+
+## Naming
+- **Targets:** Use `PascalCase` (e.g., `FeatureHome`, `CoreNetwork`).
+- **Groups:** Must match physical folder names exactly.
+- **Schemes:** Shared schemes should be defined in `Project.swift`.
+
+## Cleanliness
+- **Metadata:** Never commit `xcuserdata`, `*.xcuserstate`, or `DerivedData`.
+- **Modularity:** Prefer many small targets (frameworks) over a single large application target. This improves build times and enforces clear boundaries.\n\n<!-- b1CodingTool: Module Context [xcode] - directory-structure.md -->\n# Xcode: Directory Structure (Tuist)
+
+## Standard Layout
+```
+Project/
+├── Project.swift           # Main project definition
+├── Tuist/                  # Tuist configuration and templates
+│   ├── Config.swift
+│   ├── ProjectDescriptionHelpers/
+│   └── Templates/
+├── Targets/                # Source code for all targets
+│   └── [TargetName]/
+│       ├── Sources/
+│       ├── Resources/
+│       └── Tests/
+└── Derived/                # Generated files (ignored)
+```
+
+## Group Parity
+- The folder structure in `Targets/` must map 1:1 to the groups displayed in Xcode.\n\n<!-- b1CodingTool: Module Context [xcode] - project-as-code.md -->\n# Xcode: Project-as-Code (Tuist)
+
+## The Source of Truth
+- **Manifest First:** `Project.swift` is the absolute source of truth for the project structure.
+- **Disposable Artifacts:** `.xcodeproj` and `.xcworkspace` files are generated artifacts. They should NOT be modified manually and should NOT be committed to version control.
+- **Synchronization:** Run `tuist generate` after any change to the project definition (`Project.swift`, `Targets/`, etc.) or physical file structure.
+
+## UI Editing Prohibited
+- Never modify target membership, build phases, or build settings via the Xcode UI. These changes will be overwritten the next time the project is generated.
+- Any change that affects the project file must be done in the Swift manifests.\n\n<!-- b1CodingTool: Module Context [xcode] - signing.md -->\n# Xcode: Signing & Identity
+
+## Development Signing
+- **Automatic Signing:** Use Xcode's automatic signing for local development.
+- **Config:** Specify the `DEVELOPMENT_TEAM` and `ORGANIZATION_NAME` in the `Settings` block of `Project.swift`.
+
+## Configuration Management
+- **Bundle IDs:** Define a `bundleIdPrefix` (e.g., `com.mycompany`) and derive target bundle IDs programmatically in the manifest.
+- **Entitlements:** Store `.entitlements` files in the target's folder and link them explicitly in `Project.swift`.
+
+## Security
+- Never commit distribution certificates or provisioning profiles to the repository.
+- Use environment variables or secure vault storage for CI/CD signing identities.\n\n<!-- b1CodingTool: Module Context [flutter] - best-practices.md -->\n# Flutter: Best Practices
 
 ## Widget Composition
 - **Extract early.** If a widget's `build()` method exceeds ~40 lines or nests more than 3 levels deep, extract subtrees into their own widget classes (not private methods — widget classes get their own element node and rebuild independently).
