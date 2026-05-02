@@ -6,7 +6,7 @@ Project/
 ├── Package.swift           # Package definition
 ├── Sources/                # Source code directory
 │   └── [TargetName]/       # Target-specific code
-│       ├── Main.swift      # Entry point (for executables)
+│       ├── main.swift      # Entry point (for executables)
 │       └── Models/         # Feature-specific subdirectories
 └── Tests/                  # Test suites
     └── [TargetName]Tests/  # Target-specific tests

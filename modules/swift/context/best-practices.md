@@ -16,3 +16,7 @@
 ## Performance
 - Use `final` by default for classes to enable static dispatch.
 - Use `private` and `fileprivate` to restrict visibility and aid compiler optimizations.
+
+## Testing
+- Use `XCTUnwrap()` to safely unwrap optionals in tests instead of forced unwrapping (`!`).
+- Write independent test cases that do not rely on side effects from previous tests.

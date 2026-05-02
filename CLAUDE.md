@@ -272,7 +272,78 @@ test/
 | `pubspec.yaml` | Dependencies and assets |
 | `analysis_options.yaml` | Linting rules |
 | `l10n.yaml` | Localization config (if using `flutter_localizations`) |
-| `.env` / `dart_defines/` | Environment-specific config (never commit secrets) |\n\n<!-- b1CodingTool: Module Context [django] - best-practices.md -->\n# Django: Best Practices
+| `.env` / `dart_defines/` | Environment-specific config (never commit secrets) |\n\n<!-- b1CodingTool: Module Context [swift] - best-practices.md -->\n# Swift: Best Practices
+
+## Design Patterns
+- **Protocol-Oriented Programming (POP):** Prefer protocols and extensions for composition over deep class inheritance.
+- **Value Types:** Use `struct` and `enum` by default. Value types are safer and more performant.
+- **Reference Types:** Use `class` only when you need identity or to interface with Objective-C.
+
+## Error Handling
+- Use structured error handling with `do-catch` and custom `Error` enums.
+- Prefer throwing errors over returning `nil` or using `Optional` for failures that need explanation.
+
+## Safety
+- **Null Safety:** Avoid `!` forced unwrapping. Use `if let`, `guard let`, or nil-coalescing `??`.
+- **Exhaustive Switches:** Always use exhaustive `switch` statements for enums to ensure all cases are handled.
+
+## Performance
+- Use `final` by default for classes to enable static dispatch.
+- Use `private` and `fileprivate` to restrict visibility and aid compiler optimizations.
+
+## Testing
+- Use `XCTUnwrap()` to safely unwrap optionals in tests instead of forced unwrapping (`!`).
+- Write independent test cases that do not rely on side effects from previous tests.\n\n<!-- b1CodingTool: Module Context [swift] - conventions.md -->\n# Swift: Coding Conventions
+
+## Naming
+- **Types (Classes, Structs, Enums, Protocols):** `PascalCase` — `UserProfile`, `NetworkManager`.
+- **Variables, Parameters, Functions:** `camelCase` — `isLoading`, `fetchData()`.
+- **Enums Cases:** `camelCase` — `case success`, `case failure(Error)`.
+- **Abbreviations:** Avoid them unless they are universal (e.g., `URL`, `ID`). Use `PascalCase` for abbreviations in type names (`URLRequest`, not `UrlRequest`).
+
+## API Design
+- Follow official [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/).
+- Clarity at the point of use is the most important goal.
+- Omit needless words; every word should contribute to clarity.
+
+## Formatting
+- Default to `swift-format` defaults.
+- Use 4-space indentation.
+- Opening braces on the same line.
+
+## Concurrency
+- Mandatory use of `async/await` and `Task` for new asynchronous code.
+- Prefer `Actors` for isolating shared mutable state.
+- Use `MainActor` for code that interacts with the UI.\n\n<!-- b1CodingTool: Module Context [swift] - directory-structure.md -->\n# Swift: Directory Structure (SPM)
+
+## Standard Layout
+```
+Project/
+├── Package.swift           # Package definition
+├── Sources/                # Source code directory
+│   └── [TargetName]/       # Target-specific code
+│       ├── main.swift      # Entry point (for executables)
+│       └── Models/         # Feature-specific subdirectories
+└── Tests/                  # Test suites
+    └── [TargetName]Tests/  # Target-specific tests
+        └── [TargetName]Tests.swift
+```
+
+## Organization
+- Keep `Sources/` and `Tests/` directories mirrored.
+- Group by feature or module rather than technical layer within a target.\n\n<!-- b1CodingTool: Module Context [swift] - dependency-management.md -->\n# Swift: Dependency Management (SPM)
+
+## Package.swift
+- Declare all dependencies in the `dependencies` array of `Package.swift`.
+- Use semantic versioning requirements:
+  ```swift
+  .package(url: "...", from: "1.0.0")
+  ```
+
+## Development
+- Use `.package(path: "../LocalPackage")` for internal modularization during active development.
+- Run `swift package resolve` to fetch dependencies.
+- Run `swift package update` to update to the latest compatible versions.\n\n<!-- b1CodingTool: Module Context [django] - best-practices.md -->\n# Django: Best Practices
 
 ## Models & ORM
 - **Fat models, thin views.** Business logic belongs in model methods, managers, or a dedicated `services.py` — not in views.
