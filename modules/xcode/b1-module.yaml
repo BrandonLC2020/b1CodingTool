@@ -1,0 +1,9 @@
+name: xcode
+version: 1.0.0
+type: development
+description: "Xcode IDE management via Tuist. Enables project-as-code and folder-group parity."
+skills:
+  - name: "Xcode Target Generator"
+    description: "Assists in adding new targets to Project.swift (e.g. Unit Tests, Frameworks)."
+  - name: "Tuist Manifest Assistant"
+    description: "Helps configure dependencies and build settings in Tuist manifests."
