@@ -7,3 +7,6 @@ skills:
     description: "Assists in adding new targets to Project.swift (e.g. Unit Tests, Frameworks)."
   - name: "Tuist Manifest Assistant"
     description: "Helps configure dependencies and build settings in Tuist manifests."
+
+hooks:
+  post-install: "scripts/post-install.sh"
