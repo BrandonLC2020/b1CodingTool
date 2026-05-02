@@ -53,14 +53,21 @@ class ModuleInstaller:
         
         # 2. Run skill setup scripts
         if config.skills:
-            console.print("\\n[bold]Preparing Skills[/bold]")
+            console.print("\n[bold]Preparing Skills[/bold]")
             for skill in config.skills:
                 if skill.install_command:
                     self._run_skill_command(skill.name, skill.install_command, target_mod_dir)
                 else:
                     console.print(f"[dim]  - {skill.name} (no setup required)[/dim]")
-                    
-        console.print(f"\\n[bold green]Successfully installed {config.name}![/bold green] \U0001f680")
+
+        # 3. Run lifecycle hooks
+        if config.hooks:
+            console.print("\n[bold]Running Lifecycle Hooks[/bold]")
+            for hook_name, hook_command in config.hooks.items():
+                if hook_name == "post-install":
+                    self._run_hook(hook_name, hook_command, target_mod_dir)
+
+        console.print(f"\n[bold green]Successfully installed {config.name}![/bold green] 🚀")
 
     def _run_skill_command(self, name: str, command: str, execution_dir: Path):
         with Progress(
@@ -69,7 +76,7 @@ class ModuleInstaller:
             console=console
         ) as progress:
             task = progress.add_task(f"Executing setup for [cyan]{name}[/cyan]...", total=None)
-            
+
             try:
                 # Run the command with access to shell
                 subprocess.run(
@@ -80,8 +87,40 @@ class ModuleInstaller:
                     capture_output=True,
                     check=True
                 )
-                progress.update(task, description=f"[green]\u2714[/green] Setup complete for [cyan]{name}[/cyan]")
+                progress.update(task, description=f"[green]✔[/green] Setup complete for [cyan]{name}[/cyan]")
             except subprocess.CalledProcessError as e:
-                progress.update(task, description=f"[red]\u2716[/red] Failed setup for [cyan]{name}[/cyan]")
-                console.print(f"[red]Error Output:[/red]\\n{e.stderr}")
+                progress.update(task, description=f"[red]✖[/red] Failed setup for [cyan]{name}[/cyan]")
+                console.print(f"[red]Error Output:[/red]\n{e.stderr}")
                 # Don't halt the whole installation if one skill script fails, just note it.
+
+    def _run_hook(self, name: str, command: str, execution_dir: Path):
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console
+        ) as progress:
+            task = progress.add_task(f"Running [cyan]{name}[/cyan] hook...", total=None)
+
+            try:
+                # Run the hook script
+                # We assume the command is relative to the module directory
+                script_path = execution_dir / command
+                if script_path.exists():
+                    # Make sure it's executable just in case
+                    os.chmod(script_path, 0o755)
+
+                    subprocess.run(
+                        str(script_path), 
+                        cwd=self.project_dir, # Run hooks from project root
+                        shell=True, 
+                        text=True, 
+                        capture_output=True,
+                        check=True
+                    )
+                    progress.update(task, description=f"[green]✔[/green] {name} hook completed")
+                else:
+                    progress.update(task, description=f"[yellow]⚠[/yellow] {name} hook script not found: {command}")
+            except subprocess.CalledProcessError as e:
+                progress.update(task, description=f"[red]✖[/red] {name} hook failed")
+                console.print(f"[red]Error Output:[/red]\n{e.stderr}")
+
