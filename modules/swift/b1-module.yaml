@@ -7,3 +7,5 @@ skills:
     description: "Automated XCTest suite generation for Swift functions."
   - name: "Concurrency Refactor"
     description: "Assist in transitioning completion-handlers to async/await."
+hooks:
+  post-install: "scripts/post-install.sh"
