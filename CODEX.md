@@ -124,7 +124,1263 @@ Project/
 
 ## Security
 - Never commit distribution certificates or provisioning profiles to the repository.
-- Use environment variables or secure vault storage for CI/CD signing identities.\n\n<!-- b1CodingTool: Module Context [flutter] - best-practices.md -->\n# Flutter: Best Practices
+- Use environment variables or secure vault storage for CI/CD signing identities.\n\n<!-- b1CodingTool: Module Context [react-native] - best-practices.md -->\n# React Native (Expo): Best Practices
+
+## Component Design
+- Use **function components** exclusively. Keep components focused on a single responsibility.
+- Extract any subtree that would otherwise push `return` past ~50 lines into its own component file.
+- Avoid anonymous inline components — define them at the module level so React can maintain stable identity across renders.
+- Never nest `StyleSheet.create` calls inside components. Define styles at module scope so they're created once, not on every render.
+
+## Platform-Specific Code
+- Use `Platform.OS` for small conditional values (margins, font sizes). For substantially different UIs, use platform-specific file extensions: `Component.ios.tsx` / `Component.android.tsx`.
+- Never hardcode pixel values for safe areas — always use `useSafeAreaInsets()` from `react-native-safe-area-context`.
+- Use `KeyboardAvoidingView` with `behavior={Platform.OS === 'ios' ? 'padding' : 'height'}` for forms — the difference is required because iOS and Android handle keyboard displacement differently.
+
+```tsx
+// Good — platform file extension for divergent behavior
+// Button.ios.tsx    → uses iOS HIG styling
+// Button.android.tsx → uses Material styling
+// Button.tsx        → fallback for web/other
+```
+
+## Navigation (Expo Router)
+- Use **Expo Router** (file-based routing) for all navigation. Define routes via filesystem layout under `app/`, not imperative config.
+- Use typed routes (`href` as a typed string) — enable `"experiments": { "typedRoutes": true }` in `app.json`.
+- Pass data between routes via route params for shallow data; use a store for complex shared state. Never pass non-serializable objects as params.
+- Use **layouts** (`_layout.tsx`) to wrap groups of screens with shared chrome (header, tabs, drawers).
+
+## Performance
+- Use `FlatList` (or `FlashList` from Shopify) for any list that could grow beyond ~20 items — never `ScrollView` + `.map()`.
+- Memoize list item components with `React.memo` to prevent re-renders when only the scroll position changes.
+- Use `InteractionManager.runAfterInteractions` to defer expensive operations until after navigation animations complete.
+- Avoid JS-driven animations; use `react-native-reanimated` for 60fps animations that run on the UI thread.
+- Profile with the Flipper Performance plugin or Expo Dev Tools before optimizing.
+
+```tsx
+// Good — FlashList is significantly more performant than FlatList for long lists
+import { FlashList } from '@shopify/flash-list';
+
+<FlashList
+  data={items}
+  renderItem={({ item }) => <ItemRow item={item} />}
+  estimatedItemSize={72}
+  keyExtractor={(item) => item.id}
+/>
+```
+
+## Images & Assets
+- Always specify explicit `width` and `height` on `<Image>` — React Native cannot infer dimensions from remote URLs.
+- Use `expo-image` instead of the built-in `Image` for better caching and performance.
+- Prefer vector icons (`@expo/vector-icons`) over bitmap images for UI icons — they scale without blurring.
+
+## Async & State
+- After any `await` in an event handler, check whether the component is still mounted before calling `setState`. Use a ref flag or the `useEffect` cleanup pattern.
+- Use `SecureStore` (from `expo-secure-store`) for sensitive data (tokens, credentials) — never `AsyncStorage` for secrets.
+- Use `AsyncStorage` only for non-sensitive, serializable user preferences.
+
+## Accessibility
+- Set `accessibilityRole` on all interactive elements (`button`, `link`, `header`, etc.).
+- Set `accessibilityLabel` on elements whose visual label is insufficient (icon-only buttons, images).
+- Test with VoiceOver (iOS) and TalkBack (Android) — automated tools miss many native a11y issues.
+
+## Testing
+- Use **React Native Testing Library** (`@testing-library/react-native`) for component tests.
+- Mock `expo-router` and native modules in Jest via the Expo preset (`jest-expo`).
+- Use `react-native-reanimated/mock` in test setup to prevent animation-related errors.
+- Write E2E tests for critical flows with **Maestro** — it runs on real devices/simulators and requires no code changes.\n\n<!-- b1CodingTool: Module Context [react-native] - conventions.md -->\n# React Native (Expo): Coding Conventions
+
+## TypeScript
+- Use TypeScript for all files. Configure `strict: true` in `tsconfig.json`.
+- Avoid `any`. Use `unknown` for values of indeterminate type and narrow before use.
+- Type all component props with an `interface`. Use `type` for unions and utility types.
+- Type navigation params explicitly using Expo Router's typed routes or a hand-written param map.
+
+```tsx
+interface UserAvatarProps {
+  uri: string;
+  size?: number;
+  onPress?: () => void;
+}
+
+export function UserAvatar({ uri, size = 40, onPress }: UserAvatarProps) { ... }
+```
+
+## Naming
+| Entity | Convention | Example |
+|--------|-----------|---------|
+| Components / Screens | `PascalCase.tsx` | `UserCard.tsx`, `ProfileScreen.tsx` |
+| Hooks | `camelCase` with `use` prefix | `useAuth.ts`, `useNotifications.ts` |
+| Stores | `camelCase` + `Store` suffix | `authStore.ts` |
+| Services | `camelCase` + `Service` suffix | `authService.ts` |
+| Route files (Expo Router) | `kebab-case.tsx` | `user-profile.tsx` (maps to `/user-profile`) |
+| Layout files | `_layout.tsx` | `_layout.tsx` |
+| Constants | `SCREAMING_SNAKE_CASE` | `API_BASE_URL` |
+| Event handlers | `handle` prefix | `handlePress`, `handleSubmit` |
+| Boolean props | `is`/`has`/`can` prefix | `isLoading`, `hasError` |
+
+## Styles
+- Always use `StyleSheet.create()` at module scope — never inline style objects on JSX elements.
+- Avoid hardcoded color values in component files. Reference design tokens from a central theme file.
+- Use `useColorScheme()` or a theme context for dark/light mode — never duplicate style definitions.
+
+```tsx
+// Good
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: theme.colors.background,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: theme.colors.text,
+  },
+});
+
+// Bad — inline objects create a new object on every render
+<View style={{ flex: 1, padding: 16 }}>
+```
+
+## Imports
+Order imports in four groups separated by blank lines:
+1. React and React Native core (`react`, `react-native`)
+2. Expo SDK packages (`expo-*`, `@expo/*`)
+3. Third-party libraries (alphabetical)
+4. Internal and relative imports
+
+```tsx
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+
+import { FlashList } from '@shopify/flash-list';
+
+import { useAuth } from '@/hooks/useAuth';
+import { theme } from '@/core/theme';
+```
+
+## Component File Structure
+Order contents as follows:
+1. Imports
+2. Types / interfaces
+3. Module-scoped constants
+4. Exported component function
+5. Private helper functions (non-exported)
+6. `StyleSheet.create(...)` call (always last)
+
+## Linting & Formatting
+- Use **ESLint** with `eslint-config-expo` as the base config.
+- Use **Prettier** for formatting.
+- Enable `react-hooks/exhaustive-deps` — never disable it.
+- Run `npx expo-doctor` periodically to catch SDK version mismatches and config issues.\n\n<!-- b1CodingTool: Module Context [react-native] - directory-structure.md -->\n# React Native (Expo): Directory Structure
+
+## Expo Router File-Based Layout
+
+Routes are discovered by filesystem layout under `app/`. The structure of `app/` **is** your navigation structure.
+
+```
+├── app.json                   # Expo config (plugins, splash screen, icons, etc.)
+├── tsconfig.json
+├── .env                       # Local secrets — never commit
+├── app/                       # File-based routes (Expo Router)
+│   ├── _layout.tsx            # Root layout — providers, global error boundary
+│   ├── index.tsx              # "/" — app entry / home screen
+│   ├── (auth)/                # Route group (no URL segment) — unauthenticated screens
+│   │   ├── _layout.tsx        # Auth layout (e.g. no tab bar)
+│   │   ├── login.tsx          # "/login"
+│   │   └── register.tsx       # "/register"
+│   └── (app)/                 # Route group — authenticated screens
+│       ├── _layout.tsx        # Tab navigator or drawer lives here
+│       ├── index.tsx          # Tab: Home
+│       ├── profile/
+│       │   ├── index.tsx      # "/profile"
+│       │   └── [id].tsx       # "/profile/[id]" — dynamic segment
+│       └── settings.tsx       # "/settings"
+├── src/                       # All non-route source code
+│   ├── core/                  # Shared, app-wide code
+│   │   ├── components/        # Reusable UI primitives
+│   │   │   ├── Button/
+│   │   │   │   ├── Button.tsx
+│   │   │   │   ├── Button.test.tsx
+│   │   │   │   └── index.ts
+│   │   │   └── ...
+│   │   ├── hooks/             # App-wide hooks (useDebounce, useAppState, etc.)
+│   │   ├── theme/             # Design tokens, colors, spacing, typography
+│   │   │   └── index.ts
+│   │   ├── utils/             # Pure utility functions
+│   │   └── constants/         # App-wide constants (API_BASE_URL, etc.)
+│   └── features/
+│       ├── auth/
+│       │   ├── components/    # Feature-local UI components
+│       │   ├── hooks/         # Feature-local hooks
+│       │   ├── services/      # API calls for this feature
+│       │   │   └── authService.ts
+│       │   ├── store/         # State (Zustand store, etc.)
+│       │   │   └── authStore.ts
+│       │   └── types.ts
+│       └── profile/
+│           └── ...            # Same structure as auth/
+├── assets/                    # Images, fonts, splash screens
+└── __tests__/                 # (Optional) co-located tests are preferred
+```
+
+## Route Groups
+Expo Router supports **route groups** (parenthesized directories like `(auth)`) that create layout boundaries without adding URL segments. Use them to:
+- Apply different navigators (stack vs. tabs vs. drawer) to different sets of screens
+- Gate authenticated vs. unauthenticated screens with a layout-level redirect
+
+```tsx
+// app/(app)/_layout.tsx — redirect unauthenticated users at the layout level
+import { Redirect, Tabs } from 'expo-router';
+import { useAuthStore } from '@/features/auth/store/authStore';
+
+export default function AppLayout() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  if (!isAuthenticated) return <Redirect href="/login" />;
+  return <Tabs />;
+}
+```
+
+## Feature Module Public API
+Each feature exposes a public API via `index.ts`:
+
+```ts
+// src/features/auth/index.ts
+export { useAuth } from './hooks/useAuth';
+export { authService } from './services/authService';
+export type { AuthUser } from './types';
+```
+
+Internal files (`store/`, `components/`) are implementation details — only import them within the feature.
+
+## File Naming Rules
+| Type | Convention | Example |
+|------|-----------|---------|
+| Route files | `kebab-case.tsx` | `user-profile.tsx` |
+| Dynamic segments | `[param].tsx` | `[id].tsx` |
+| Layouts | `_layout.tsx` | `_layout.tsx` |
+| Components | `PascalCase.tsx` | `UserCard.tsx` |
+| Hooks | `camelCase.ts` | `useAuth.ts` |
+| Services | `camelCase.ts` | `authService.ts` |
+| Tests | `<subject>.test.tsx` | `UserCard.test.tsx` |
+
+## Key Config Files
+| File | Purpose |
+|------|---------|
+| `app.json` | Expo project config — plugins, icons, splash, permissions |
+| `tsconfig.json` | TypeScript config — set `paths` for `@/` alias pointing to `src/` |
+| `.eslintrc.js` | Lint config — extend `expo` |
+| `babel.config.js` | Babel config — required for Expo Router and Reanimated |\n\n<!-- b1CodingTool: Module Context [react-native] - dependency-management.md -->\n# React Native (Expo): Dependency Management
+
+## Overview
+
+Expo projects use a JavaScript/Node.js package manager — **npm**, **pnpm**, or **Yarn** — combined with the **Expo SDK** to manage native dependencies. The key distinction from plain React web: many packages have native code (iOS/Android modules) that must be linked into the app binary, and Expo manages this through its plugin system.
+
+**Recommendation: use npm or pnpm.** Expo's own tooling (`npx expo install`) wraps whichever manager you use. pnpm is faster and more disk-efficient; npm is universally compatible and has zero setup friction.
+
+## Two Layers of Dependencies
+
+React Native (Expo) has two dependency concerns that don't exist in web:
+
+1. **JS dependencies** — installed via your package manager into `node_modules`, same as web.
+2. **Native dependencies** — packages with Expo Config Plugins that modify the native iOS/Android project. These are installed the same way but require an **EAS Build** (or `expo prebuild`) to take effect. You cannot just `npm install` a native module and expect it to work in Expo Go.
+
+## `npx expo install` — Always Use This for Expo Packages
+
+When adding Expo SDK packages, **always use `npx expo install`** instead of `npm install` / `pnpm add` directly. It automatically resolves the correct version that is compatible with your current Expo SDK version.
+
+```bash
+# Good — installs the SDK-compatible version
+npx expo install expo-camera expo-location
+
+# Risky — may install a version incompatible with your SDK
+npm install expo-camera
+pnpm add expo-camera
+```
+
+For non-Expo packages (e.g., `date-fns`, `zod`, `zustand`), use your package manager directly — `npx expo install` works for these too, but there's no SDK constraint to worry about.
+
+## Common Commands
+
+```bash
+# Installing
+npx expo install expo-image expo-router   # Expo/React Native packages (SDK-aware)
+npm install zod zustand                   # Pure JS packages
+pnpm add zod zustand                      # Same, with pnpm
+
+# Dev dependencies
+npm install -D @testing-library/react-native jest-expo
+pnpm add -D @testing-library/react-native jest-expo
+
+# Removing
+npm uninstall expo-camera
+pnpm remove expo-camera
+
+# Checking for incompatible versions
+npx expo-doctor                           # Detects SDK version mismatches
+npx expo install --check                  # Lists packages with incompatible versions
+npx expo install --fix                    # Auto-corrects version mismatches
+
+# Upgrading the Expo SDK
+npx expo upgrade                          # Bumps SDK version and adjusts all expo deps
+```
+
+## package.json Structure
+
+```json
+{
+  "name": "my-expo-app",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "build:preview": "eas build --profile preview",
+    "test": "jest"
+  },
+  "dependencies": {
+    "expo": "~51.0.0",
+    "expo-router": "~3.5.0",
+    "expo-status-bar": "~1.12.1",
+    "react": "18.2.0",
+    "react-native": "0.74.1",
+    "@sentry/react-native": "~5.22.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@testing-library/react-native": "^12.5.1",
+    "jest": "^29.7.0",
+    "jest-expo": "~51.0.0",
+    "typescript": "^5.3.3"
+  }
+}
+```
+
+Note that `react` and `react-native` are **exact pins** (no `^`) — Expo specifies exact versions that are tested against the SDK. Do not change these manually; let `npx expo upgrade` manage them.
+
+## Lockfiles
+
+Always commit the lockfile (`package-lock.json` or `pnpm-lock.yaml`). EAS Build uses the lockfile to reproduce your exact dependency tree in the cloud builder. Without a committed lockfile, two builds of the same commit may produce different binaries.
+
+## Native Modules and EAS Build
+
+Packages with native code (camera, sensors, notifications, etc.) require a native build to take effect. The workflow is:
+
+1. Install the package: `npx expo install expo-camera`
+2. Add required permissions/config to `app.json` (the package's README specifies what's needed)
+3. Build with EAS: `eas build --profile development` — this triggers a new native build with the module linked in
+
+Changes to native modules **do not** take effect in Expo Go or a previous development build — you need a new build.
+
+```bash
+# Create a development build (one-time per native dependency change)
+eas build --profile development --platform ios
+eas build --profile development --platform android
+```
+
+## Keeping Dependencies Updated
+
+```bash
+npx expo-doctor          # Shows SDK mismatches and known issues
+npx expo install --fix   # Corrects Expo package versions to match current SDK
+npx expo upgrade         # Upgrades to latest Expo SDK (follow migration guide after)
+```
+
+For automated updates, use **Renovate** with the `expo` preset — it understands Expo SDK constraints and opens PRs for safe updates. Manual big-bang upgrades of Expo SDK versions are painful; keeping up with each minor release is far easier.
+
+```bash
+# Security audit
+npm audit
+pnpm audit
+```
+
+## pnpm-Specific: Expo Compatibility
+
+Expo works with pnpm but requires one workaround for Metro bundler, which doesn't follow pnpm's symlinked `node_modules` by default. Add to your project:
+
+```js
+// metro.config.js
+const { getDefaultConfig } = require('expo/metro-config');
+const config = getDefaultConfig(__dirname);
+
+// Required for pnpm: resolve symlinks
+config.resolver.unstable_enableSymlinks = true;
+
+module.exports = config;
+```
+
+And in `.npmrc`:
+```ini
+# .npmrc — required for pnpm + Expo
+node-linker=hoisted
+```
+
+This tells pnpm to use a flat `node_modules` layout (like npm), which Metro can resolve without issues.\n\n<!-- b1CodingTool: Module Context [react-native] - logging.md -->\n# React Native (Expo): Logging Best Practices
+
+## Philosophy
+
+Good logs answer two questions without any additional context: **what happened**, and **why it matters**. In React Native, logs serve three distinct audiences: the developer in Expo DevTools, a crash reporting dashboard, and an AI agent analyzing a production incident.
+
+- **Structured over `console.log`.** `console.log("Payment failed")` is invisible in production. Structured events sent to Sentry (or similar) persist across sessions and can be queried at scale.
+- **Breadcrumbs before crashes.** The most valuable logs in mobile are the events recorded *before* a crash. They reconstruct the user journey without needing a repro.
+- **Strip sensitive data.** Device logs can be extracted from bug reports. Production logs may be stored for months. Never log tokens, passwords, or raw PII.
+
+## Log Levels — When to Use Each
+
+| Level | Use for |
+|-------|---------|
+| `debug` | Internal state, hook values, API response bodies. Development only. |
+| `info` | Normal lifecycle: screen viewed, user action completed, API call succeeded. |
+| `warn` | Unexpected but recoverable: retry triggered, permission denied, feature flag defaulted. |
+| `error` | Something broke: unhandled exception, API error, required native module unavailable. |
+
+## A Thin Logger Wrapper
+
+Wrap logging in a single module so you can strip debug output from production builds and attach consistent context to every event:
+
+```ts
+// src/core/utils/logger.ts
+import * as Sentry from '@sentry/react-native';
+import { Platform } from 'react-native';
+
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+const IS_DEV = __DEV__;
+
+function emit(level: LogLevel, event: string, context: Record<string, unknown> = {}) {
+  const entry = {
+    event,
+    level,
+    timestamp: new Date().toISOString(),
+    platform: Platform.OS,
+    ...context,
+  };
+
+  if (level === 'debug' && !IS_DEV) return;   // strip debug in production
+
+  if (IS_DEV) {
+    console[level](`[${level.toUpperCase()}] ${event}`, context);
+  }
+
+  // Add as Sentry breadcrumb for crash context
+  Sentry.addBreadcrumb({
+    category: event,
+    data: context,
+    level: level === 'warn' ? 'warning' : level,
+  });
+
+  if (level === 'error') {
+    Sentry.captureMessage(event, { level: 'error', extra: context });
+  }
+}
+
+export const logger = {
+  debug: (event: string, ctx?: Record<string, unknown>) => emit('debug', event, ctx),
+  info:  (event: string, ctx?: Record<string, unknown>) => emit('info',  event, ctx),
+  warn:  (event: string, ctx?: Record<string, unknown>) => emit('warn',  event, ctx),
+  error: (event: string, ctx?: Record<string, unknown>) => emit('error', event, ctx),
+  exception: (event: string, error: unknown, ctx?: Record<string, unknown>) => {
+    emit('error', event, { ...ctx, error: String(error) });
+    Sentry.captureException(error, { extra: ctx });
+  },
+};
+```
+
+## Crash Reporting: Sentry
+
+Use `@sentry/react-native` for unhandled JS and native crashes. It wraps the app at the root level, captures native stack traces, and stores breadcrumbs leading up to a crash.
+
+```bash
+npx expo install @sentry/react-native
+```
+
+```ts
+// app/_layout.tsx
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  environment: process.env.EXPO_PUBLIC_ENV ?? 'development',
+  tracesSampleRate: 0.1,
+  enableNativeNagger: false,     // suppress dev warnings about native setup
+});
+
+export default Sentry.wrap(RootLayout);
+```
+
+Upload source maps as part of your EAS build to get readable stack traces in the Sentry dashboard. Configure this in `app.json`:
+
+```json
+{
+  "expo": {
+    "plugins": [["@sentry/react-native/expo", { "organization": "...", "project": "..." }]]
+  }
+}
+```
+
+## Navigation Logging (Expo Router)
+
+Log every screen visit and add navigation breadcrumbs. Use Expo Router's `usePathname` hook to track the current route:
+
+```tsx
+// src/core/components/NavigationLogger.tsx
+import { useEffect } from 'react';
+import { usePathname } from 'expo-router';
+import * as Sentry from '@sentry/react-native';
+import { logger } from '@/core/utils/logger';
+
+export function NavigationLogger() {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    logger.info('screen_viewed', { screen: pathname });
+    Sentry.addBreadcrumb({ category: 'navigation', message: pathname, level: 'info' });
+  }, [pathname]);
+
+  return null;
+}
+```
+
+Mount it inside the root layout:
+```tsx
+// app/_layout.tsx
+export default function RootLayout() {
+  return (
+    <>
+      <NavigationLogger />
+      <Slot />
+    </>
+  );
+}
+```
+
+## Network Request Logging
+
+Log every outbound API call. Use an Axios or `fetch` wrapper interceptor:
+
+```ts
+// src/core/services/httpClient.ts
+export async function httpClient(url: string, init?: RequestInit): Promise<Response> {
+  const method = init?.method ?? 'GET';
+  logger.debug('http_request', { method, url });
+
+  const start = Date.now();
+  let response: Response;
+  try {
+    response = await fetch(url, init);
+  } catch (err) {
+    logger.exception('http_network_error', err, { method, url });
+    throw err;
+  }
+
+  const duration_ms = Date.now() - start;
+  const level = response.ok ? 'info' : 'warn';
+  logger[level]('http_response', { method, url, status: response.status, duration_ms });
+
+  if (response.status >= 500) {
+    logger.error('http_server_error', { method, url, status: response.status });
+  }
+  return response;
+}
+```
+
+## App Lifecycle Logging
+
+Log app state transitions (foreground, background, inactive) to understand context around crashes:
+
+```ts
+// src/core/hooks/useAppLifecycleLogger.ts
+import { useEffect } from 'react';
+import { AppState } from 'react-native';
+import { logger } from '@/core/utils/logger';
+
+export function useAppLifecycleLogger() {
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      logger.info('app_state_changed', { state: nextState });
+    });
+    return () => sub.remove();
+  }, []);
+}
+```
+
+Mount in the root layout.
+
+## Structured Log Events — Examples
+
+```ts
+// Authentication
+logger.info('user_login_succeeded', { user_id: user.id });
+logger.warn('user_login_failed', { reason: 'bad_credentials' });
+
+// Permissions
+logger.info('permission_requested', { permission: 'camera', granted: true });
+logger.warn('permission_denied', { permission: 'notifications' });
+
+// Business events
+logger.info('purchase_completed', { product_id: item.id, price: item.price });
+logger.error('purchase_failed', { product_id: item.id, reason: error.code });
+
+// Push notifications
+logger.info('push_notification_received', { type: notification.type });
+```
+
+## What to Log (and When)
+
+- **App lifecycle:** cold start, foreground/background transitions, crash recovery
+- **Screen views:** every route change (breadcrumb for crash context)
+- **Auth events:** login success/failure (reason, never the credential), logout, session expired, token refreshed
+- **API calls:** every request (method, URL) and response (status, duration_ms)
+- **Permissions:** every request and result (granted/denied)
+- **Errors:** every caught exception — log before rethrowing or recovering
+- **Push notifications:** received, tapped, dismissed
+- **Deep links:** every deep link handled (URL scheme, source)
+
+## What NOT to Log
+
+- Passwords, tokens, API keys — ever
+- Full names, emails, or phone numbers in log payloads (log user_id instead)
+- Location data beyond coarse region (city at most)
+- Raw push notification payloads that may contain sensitive content
+- Debug-level logs in production builds (`__DEV__` guard)
+
+## Development: Expo DevTools + Flipper
+
+In development, logs appear in the Expo terminal and in Flipper (if installed). Use the `react-native-logs` library if you want log level filtering and color coding in the terminal:
+
+```bash
+npx expo install react-native-logs
+```
+
+This gives you filterable, colored log output during development with no production overhead.\n\n<!-- b1CodingTool: Module Context [react-web] - best-practices.md -->\n# React Web: Best Practices
+
+## Component Design
+- **One responsibility per component.** If a component fetches data, transforms it, AND renders it, split it up. Keep presentational components free of data-fetching logic.
+- Prefer **function components** exclusively. Class components are legacy — don't introduce new ones.
+- Keep component files under ~150 lines. If a file grows larger, extract sub-components or hooks.
+- Extract repeated JSX patterns into their own components, not private render functions. Extracted components get their own reconciliation identity; private functions do not.
+
+## Hooks
+- Only call hooks at the top level — never inside conditions, loops, or nested functions.
+- Extract stateful logic into **custom hooks** (`use` prefix) when the same logic appears in more than one component or when a component's logic becomes hard to follow.
+- Keep `useEffect` lean: one effect per concern, and always include a cleanup function when the effect sets up a subscription or timer.
+- Avoid lying to the dependency array. If a value is used inside `useEffect`, it must be in the array. Use `useCallback`/`useMemo` to stabilize references rather than omitting them.
+
+```tsx
+// Good — one concern per effect, honest deps
+useEffect(() => {
+  const sub = eventBus.subscribe('update', handleUpdate);
+  return () => sub.unsubscribe();
+}, [handleUpdate]);
+```
+
+## State Management
+- Keep state as local as possible. Lift only when two sibling components genuinely need the same value.
+- Use `useReducer` over multiple related `useState` calls when state transitions are complex or interdependent.
+- Prefer **server state libraries** (TanStack Query, SWR) over manually managing fetch/loading/error state in `useState` + `useEffect`.
+- Reserve context for truly global, low-frequency values (theme, locale, auth user). Don't use context as a substitute for a proper state manager — it re-renders all consumers on every change.
+
+## Performance
+- Wrap expensive computations in `useMemo`; wrap callbacks passed as props in `useCallback` — but only when you have a measured reason to, not preemptively.
+- Use `React.lazy` + `Suspense` to code-split routes and heavy components.
+- Virtualize long lists with a library like `@tanstack/react-virtual` — never render thousands of DOM nodes eagerly.
+- Profile with React DevTools Profiler before optimizing. Premature optimization introduces complexity for no gain.
+
+## Data Fetching
+- Co-locate data fetching with the component that owns it, not a top-level ancestor that passes data down five levels.
+- Always handle three states explicitly: loading, error, success. Never assume a fetch will succeed.
+- Cancel or ignore in-flight requests when a component unmounts to avoid state updates on unmounted components.
+
+```tsx
+// Good — explicit states
+if (isLoading) return <Spinner />;
+if (error) return <ErrorView message={error.message} />;
+return <UserList users={data} />;
+```
+
+## Accessibility
+- Every interactive element must be reachable by keyboard and have a descriptive label (`aria-label`, `aria-labelledby`, or visible text).
+- Use semantic HTML elements (`<button>`, `<nav>`, `<main>`, `<section>`) — don't use `<div onClick>` where a `<button>` belongs.
+- Manage focus explicitly on route changes and modal open/close.
+- Test with a screen reader periodically, not just automated lint tools.
+
+## Error Boundaries
+- Wrap route-level and feature-level subtrees in error boundaries so a single component crash doesn't take down the whole app.
+- Log errors to an observability service (Sentry, Datadog) inside `componentDidCatch`.
+
+## Testing
+- Prefer **React Testing Library** over Enzyme or snapshot tests — test behavior, not implementation.
+- Query by accessible roles and labels (`getByRole`, `getByLabelText`), not by class names or test IDs.
+- Use **MSW (Mock Service Worker)** to intercept network requests in tests rather than mocking fetch directly.
+- Reserve end-to-end tests (Playwright, Cypress) for critical user flows; they're slow — don't use them as unit tests.
+
+```tsx
+// Good — tests what the user sees
+test('shows error on failed login', async () => {
+  render(<LoginForm />);
+  await userEvent.type(screen.getByLabelText('Email'), 'bad@example.com');
+  await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Invalid credentials');
+});
+```\n\n<!-- b1CodingTool: Module Context [react-web] - conventions.md -->\n# React Web: Coding Conventions
+
+## TypeScript
+- Use TypeScript for all new files. Avoid `any` — use `unknown` when the type is genuinely unknown, then narrow it.
+- Type component props with an `interface` (not `type` alias) when the props are a plain object. Use `type` for unions, intersections, and mapped types.
+- Never assert with `as` to silence a type error — fix the underlying type instead.
+- Prefer explicit return types on hooks and utility functions; let TypeScript infer them on simple components.
+
+```tsx
+// Good
+interface UserCardProps {
+  user: User;
+  onSelect: (id: string) => void;
+}
+
+export function UserCard({ user, onSelect }: UserCardProps) { ... }
+```
+
+## Naming
+| Entity | Convention | Example |
+|--------|-----------|---------|
+| Components | `PascalCase` | `UserCard`, `LoginForm` |
+| Hooks | `camelCase` with `use` prefix | `useAuth`, `useUserList` |
+| Context | `PascalCase` + `Context` suffix | `ThemeContext`, `AuthContext` |
+| Files (components) | `PascalCase.tsx` | `UserCard.tsx` |
+| Files (hooks/utils) | `camelCase.ts` | `useAuth.ts`, `formatDate.ts` |
+| Files (tests) | `<subject>.test.tsx` | `UserCard.test.tsx` |
+| Constants | `SCREAMING_SNAKE_CASE` | `MAX_RETRY_COUNT` |
+| Event handlers | `handle` prefix | `handleSubmit`, `handleClose` |
+| Boolean props/vars | `is`/`has`/`can` prefix | `isLoading`, `hasError`, `canEdit` |
+
+## Imports
+Order imports in four groups separated by blank lines:
+1. React and React-ecosystem (`react`, `react-dom`, `react-router-dom`)
+2. Third-party libraries (alphabetical)
+3. Internal absolute imports (`@/components/...`, `@/hooks/...`)
+4. Relative local imports (`./`, `../`)
+
+```tsx
+import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { format } from 'date-fns';
+import { z } from 'zod';
+
+import { Button } from '@/components/ui/Button';
+import { useAuth } from '@/hooks/useAuth';
+
+import { UserCard } from './UserCard';
+```
+
+## Component Structure
+Order the contents of a component file as follows:
+1. Imports
+2. Types / interfaces
+3. Constants (module-scoped)
+4. Component function (exported)
+5. Helper functions used only by this component (non-exported)
+6. Styles (if co-located CSS modules or styled-components)
+
+## Props
+- Destructure props in the function signature, not inside the body.
+- Use default parameter values instead of `||` fallbacks inside the component.
+- Never spread all props onto a DOM element (`<div {...props}>`) — it leaks unknown attributes to the DOM.
+
+```tsx
+// Good
+function Badge({ label, variant = 'default', className }: BadgeProps) { ... }
+
+// Bad
+function Badge(props: BadgeProps) {
+  const label = props.label || 'N/A'; // use default params instead
+}
+```
+
+## Event Handlers
+- Name handlers `handle<Event>` when defined inside the component, `on<Event>` when passed as a prop.
+- Avoid inline arrow functions on JSX props for handlers with non-trivial logic — extract them for readability.
+
+## Linting & Formatting
+- Use **ESLint** with `eslint-plugin-react`, `eslint-plugin-react-hooks`, and `eslint-plugin-jsx-a11y`.
+- Use **Prettier** for formatting (configure via `.prettierrc`).
+- Enable the `react-hooks/exhaustive-deps` rule — never disable it without a comment explaining why.
+- Run `tsc --noEmit` in CI to catch type errors separately from lint.\n\n<!-- b1CodingTool: Module Context [react-web] - directory-structure.md -->\n# React Web: Directory Structure
+
+## Feature-First Layout (Recommended)
+Organize by **feature**, not by technical layer. Each feature is self-contained.
+
+```
+src/
+├── main.tsx                   # Entry point — ReactDOM.createRoot only
+├── App.tsx                    # Router setup, providers, global layout
+├── core/                      # Shared, app-wide code
+│   ├── components/            # Truly reusable UI primitives
+│   │   ├── Button/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Button.test.tsx
+│   │   │   └── index.ts       # Re-export: import { Button } from '@/core/components/Button'
+│   │   └── ...
+│   ├── hooks/                 # App-wide hooks (useDebounce, useLocalStorage, etc.)
+│   ├── utils/                 # Pure utility functions (no React dependencies)
+│   ├── types/                 # Shared TypeScript types/interfaces
+│   ├── constants/             # App-wide constants
+│   └── router/
+│       └── router.tsx         # Route definitions (React Router, TanStack Router, etc.)
+├── features/
+│   ├── auth/
+│   │   ├── components/        # Feature-local UI components
+│   │   │   └── LoginForm.tsx
+│   │   ├── hooks/             # Feature-local hooks
+│   │   │   └── useLogin.ts
+│   │   ├── pages/             # Route-level components (one per route)
+│   │   │   ├── LoginPage.tsx
+│   │   │   └── RegisterPage.tsx
+│   │   ├── services/          # API call functions for this feature
+│   │   │   └── authService.ts
+│   │   ├── store/             # State slice (Zustand store, Redux slice, etc.)
+│   │   │   └── authStore.ts
+│   │   └── types.ts           # Feature-local types
+│   └── dashboard/
+│       └── ...                # Same structure as auth/
+├── assets/                    # Static assets (images, fonts, icons)
+└── styles/                    # Global CSS, design tokens, theme
+    ├── globals.css
+    └── tokens.css
+```
+
+## Key Conventions
+
+**Index files:** Use `index.ts` barrel files at the feature boundary to define the public API of a feature. Internal files should only be imported by sibling files in the same feature.
+
+```ts
+// features/auth/index.ts — public API
+export { LoginPage } from './pages/LoginPage';
+export { useAuth } from './hooks/useAuth';
+export type { AuthUser } from './types';
+```
+
+**Services:** API calls live in `services/`, not directly in hooks or components. This separates transport concerns from UI logic and makes mocking in tests trivial.
+
+```ts
+// features/auth/services/authService.ts
+export async function login(credentials: LoginCredentials): Promise<AuthUser> {
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(credentials),
+  });
+  if (!res.ok) throw new ApiError(res);
+  return res.json();
+}
+```
+
+**Pages vs Components:** A `page` is a route-level component — it composes feature components and handles data fetching. A `component` is reusable within (or across) features.
+
+## File Naming Rules
+| Type | Convention | Example |
+|------|-----------|---------|
+| Components / Pages | `PascalCase.tsx` | `UserProfile.tsx`, `LoginPage.tsx` |
+| Hooks | `camelCase.ts` | `useAuth.ts` |
+| Services | `camelCase.ts` | `authService.ts` |
+| Stores/slices | `camelCase.ts` | `authStore.ts` |
+| Tests | `<subject>.test.tsx` | `LoginForm.test.tsx` |
+| Types | `camelCase.ts` or `types.ts` | `types.ts` |
+| Barrel exports | `index.ts` | `index.ts` |
+
+## Key Config Files at Project Root
+| File | Purpose |
+|------|---------|
+| `tsconfig.json` | TypeScript config — set `paths` for `@/` alias |
+| `vite.config.ts` / `next.config.ts` | Bundler config |
+| `.eslintrc.cjs` | Lint rules |
+| `.prettierrc` | Formatting rules |
+| `vitest.config.ts` | Test runner config |\n\n<!-- b1CodingTool: Module Context [react-web] - dependency-management.md -->\n# React Web: Dependency Management
+
+## Overview
+
+React web projects use a JavaScript/Node.js package manager to install dependencies from the npm registry. The three main options are **npm**, **pnpm**, and **Yarn**. All three read `package.json` and produce a lockfile, but they differ in performance, disk usage, and workspace support.
+
+**Recommendation: use pnpm for new projects.** It is significantly faster than npm, uses a content-addressable store to eliminate duplicate packages across projects, and has first-class monorepo support.
+
+## Comparison
+
+| | npm | pnpm | Yarn Berry |
+|---|---|---|---|
+| **Bundled with Node** | Yes | No (`npm i -g pnpm`) | No |
+| **Install speed** | Baseline | ~2× faster | Similar to pnpm |
+| **Disk usage** | High (copies per project) | Low (global content store, hard links) | Low (PnP mode) |
+| **Lockfile** | `package-lock.json` | `pnpm-lock.yaml` | `yarn.lock` |
+| **Workspaces / monorepo** | Basic | Excellent | Excellent |
+| **Compatibility** | Universal | Very high | High (PnP mode can break some tools) |
+| **Ecosystem tooling** | Universal | Widely supported | Varies |
+
+## pnpm (Recommended)
+
+### Setup
+```bash
+npm install -g pnpm          # install once globally
+# or: corepack enable pnpm   # use Node's built-in corepack (preferred)
+```
+
+### Common Commands
+```bash
+pnpm install                 # install from pnpm-lock.yaml (CI / after pull)
+pnpm add react-router-dom    # add a runtime dependency
+pnpm add -D vitest           # add a dev dependency
+pnpm remove axios            # remove a package
+pnpm update                  # update all packages within semver constraints
+pnpm update --latest         # bump all to latest (ignores constraints — review carefully)
+pnpm outdated                # list packages with newer versions available
+pnpm run dev                 # run a script from package.json
+pnpm dlx create-vite         # run a one-off package without installing globally (like npx)
+```
+
+### package.json with pnpm
+```json
+{
+  "name": "my-react-app",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.24.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.4.5",
+    "vite": "^5.3.1",
+    "vitest": "^1.6.0",
+    "eslint": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
+```
+
+Enforce the correct package manager with a `.npmrc`:
+```ini
+# .npmrc
+engine-strict=true
+```
+
+And optionally a `package.json` field to warn users who use a different manager:
+```json
+{
+  "packageManager": "pnpm@9.4.0"
+}
+```
+
+---
+
+## npm
+
+npm ships with Node.js and requires no extra installation. Use it when simplicity matters more than speed, or when a team/environment has constraints against additional tooling.
+
+### Common Commands
+```bash
+npm install                  # install from package-lock.json
+npm install react-router-dom # add a runtime dependency
+npm install -D vitest        # add a dev dependency
+npm uninstall axios          # remove a package
+npm update                   # update within semver constraints
+npm outdated                 # list packages with newer versions
+npm run dev                  # run a script
+npx create-vite              # run a one-off package
+```
+
+---
+
+## Yarn
+
+Yarn Classic (v1) is largely superseded. Yarn Berry (v2+) introduced Plug'n'Play (PnP) mode which eliminates `node_modules` entirely — fast and disk-efficient, but can break tools that expect `node_modules` on disk (some Vite plugins, Jest configs). Use Yarn Berry only if your team is already on it.
+
+---
+
+## Version Constraints
+
+All three managers use npm's semver constraint syntax:
+
+| Constraint | Meaning | Use when |
+|------------|---------|----------|
+| `^1.2.3` | `>=1.2.3 <2.0.0` | Most dependencies — allows compatible updates |
+| `~1.2.3` | `>=1.2.3 <1.3.0` | Patch-only updates |
+| `1.2.3` | Exact pin | Rarely — when a specific version is required |
+| `*` or `""` | Any version | Never |
+
+**Prefer `^`.** It allows minor and patch updates (non-breaking by semver) while preventing unexpected major version jumps.
+
+## Lockfiles
+
+Always commit the lockfile (`package-lock.json`, `pnpm-lock.yaml`, or `yarn.lock`). Without it, `npm install` / `pnpm install` in CI may install different patch versions than what you tested locally, causing hard-to-debug environment-specific bugs.
+
+Never commit `node_modules/` — add it to `.gitignore`.
+
+## Keeping Dependencies Updated
+
+Run `pnpm outdated` (or `npm outdated`) regularly. For automated updates, use **Renovate** or **Dependabot** — they open PRs with changelogs when new versions are available, keeping updates small and reviewable rather than accumulating into a painful big-bang upgrade.
+
+```bash
+# One-off audit for security vulnerabilities
+pnpm audit
+npm audit
+
+# Auto-fix non-breaking vulnerabilities
+pnpm audit --fix
+npm audit fix
+```\n\n<!-- b1CodingTool: Module Context [react-web] - logging.md -->\n# React Web: Logging Best Practices
+
+## Philosophy
+
+Good logs answer two questions without any additional context: **what happened**, and **why it matters**. In a React web app, logging spans two environments — the **browser** (client-side events, JS errors, user interactions) and the **server** (if using SSR/Next.js or a BFF). Both need structured, queryable output.
+
+- **Structured over console strings.** `console.log("Login failed")` disappears after a page reload and can't be queried. Structured events sent to an observability platform (Sentry, Datadog, LogRocket) persist and can be analyzed at scale.
+- **Correlation IDs.** Every user session and every significant action should carry a trace ID so that a sequence of events can be reconstructed in order.
+- **Never log sensitive data.** The browser console is visible to anyone with DevTools open. Log pipelines often store data for 30–90 days. Treat client-side logs as public.
+
+## Log Levels — When to Use Each
+
+| Level | Use for |
+|-------|---------|
+| `debug` | Internal state during development. Strip from production builds. |
+| `info` | Normal lifecycle events: page viewed, feature used, API call succeeded. |
+| `warn` | Unexpected but non-fatal: deprecated prop used, retry triggered, feature flag defaulted. |
+| `error` | Something broke: unhandled exception, API error, required resource missing. |
+
+## A Thin Logger Wrapper
+
+Wrap `console` in a lightweight logger so you can:
+- Strip debug logs from production builds
+- Attach consistent metadata (app version, session ID, timestamp) to every event
+- Swap the transport later (e.g., send errors to Sentry) without changing call sites
+
+```ts
+// src/core/utils/logger.ts
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+interface LogEvent {
+  event: string;
+  level: LogLevel;
+  timestamp: string;
+  session_id: string;
+  app_version: string;
+  [key: string]: unknown;
+}
+
+const SESSION_ID = crypto.randomUUID();
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? 'unknown';
+const IS_PROD = import.meta.env.PROD;
+
+function emit(level: LogLevel, event: string, context: Record<string, unknown> = {}) {
+  const entry: LogEvent = {
+    event,
+    level,
+    timestamp: new Date().toISOString(),
+    session_id: SESSION_ID,
+    app_version: APP_VERSION,
+    ...context,
+  };
+
+  if (level === 'debug' && IS_PROD) return;  // strip debug in prod
+
+  console[level](IS_PROD ? JSON.stringify(entry) : entry);
+
+  if (level === 'error') {
+    // forward to error tracking
+    reportToSentry(entry);
+  }
+}
+
+export const logger = {
+  debug: (event: string, ctx?: Record<string, unknown>) => emit('debug', event, ctx),
+  info:  (event: string, ctx?: Record<string, unknown>) => emit('info',  event, ctx),
+  warn:  (event: string, ctx?: Record<string, unknown>) => emit('warn',  event, ctx),
+  error: (event: string, ctx?: Record<string, unknown>) => emit('error', event, ctx),
+};
+```
+
+## Error Tracking: Sentry
+
+Use Sentry for unhandled JS errors and React rendering errors. It captures stack traces, breadcrumbs, and device context automatically.
+
+```bash
+npm install @sentry/react
+```
+
+```ts
+// src/main.tsx
+import * as Sentry from '@sentry/react';
+
+Sentry.init({
+  dsn: import.meta.env.VITE_SENTRY_DSN,
+  environment: import.meta.env.MODE,
+  release: import.meta.env.VITE_APP_VERSION,
+  tracesSampleRate: 0.1,
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }),
+  ],
+});
+```
+
+## Error Boundaries with Logging
+
+Wrap route-level subtrees in error boundaries that log to Sentry before rendering a fallback:
+
+```tsx
+// src/core/components/ErrorBoundary.tsx
+import { Component, ErrorInfo, ReactNode } from 'react';
+import * as Sentry from '@sentry/react';
+import { logger } from '@/core/utils/logger';
+
+interface Props { children: ReactNode; fallback?: ReactNode; context?: string; }
+interface State { hasError: boolean; }
+
+export class ErrorBoundary extends Component<Props, State> {
+  state = { hasError: false };
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    logger.error('react_render_error', {
+      context: this.props.context ?? 'unknown',
+      error: error.message,
+      component_stack: info.componentStack ?? undefined,
+    });
+    Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
+  }
+
+  static getDerivedStateFromError() { return { hasError: true }; }
+
+  render() {
+    return this.state.hasError
+      ? (this.props.fallback ?? <p>Something went wrong.</p>)
+      : this.props.children;
+  }
+}
+```
+
+## Navigation Logging
+
+Log every route change so you can reconstruct the user journey before an error:
+
+```ts
+// src/core/router/router.tsx (React Router)
+router.subscribe((state) => {
+  logger.info('page_viewed', {
+    path: state.location.pathname,
+    search: state.location.search,
+  });
+  Sentry.addBreadcrumb({
+    category: 'navigation',
+    message: state.location.pathname,
+    level: 'info',
+  });
+});
+```
+
+## API Call Logging
+
+Wrap `fetch` (or your HTTP client) to log every request and response:
+
+```ts
+// src/core/services/httpClient.ts
+export async function httpClient(url: string, init?: RequestInit): Promise<Response> {
+  const method = init?.method ?? 'GET';
+  logger.debug('http_request', { method, url });
+
+  const start = performance.now();
+  let response: Response;
+  try {
+    response = await fetch(url, init);
+  } catch (err) {
+    logger.error('http_network_error', { method, url, error: String(err) });
+    throw err;
+  }
+
+  const duration_ms = Math.round(performance.now() - start);
+  const level = response.ok ? 'info' : 'warn';
+  logger[level]('http_response', { method, url, status: response.status, duration_ms });
+
+  if (response.status >= 500) {
+    logger.error('http_server_error', { method, url, status: response.status });
+  }
+  return response;
+}
+```
+
+## Structured Log Events — Examples
+
+```ts
+// Authentication
+logger.info('user_login_succeeded', { user_id: user.id });
+logger.warn('user_login_failed', { reason: 'invalid_credentials', email_domain: 'example.com' });
+
+// Feature usage
+logger.info('feature_used', { feature: 'export_csv', row_count: 1200 });
+
+// Errors
+logger.error('payment_failed', { order_id: order.id, reason: result.error_code });
+```
+
+## What to Log (and When)
+
+- **Page views:** every route change (path, query params — not query values containing IDs/tokens)
+- **Auth events:** login success/failure (reason only, never credential), logout, session expired
+- **API calls:** every request (method, URL) and response (status, duration) — response body only at debug
+- **User actions:** significant interactions (form submitted, purchase attempted, filter applied)
+- **Errors:** every caught exception before it's suppressed, every Error Boundary catch
+- **Feature flags:** which flags are active at session start (useful for debugging flag-specific bugs)
+
+## What NOT to Log
+
+- Passwords, tokens, API keys — ever
+- Full names, email addresses, phone numbers in log payloads (log user_id instead)
+- Raw form field values (may contain passwords or card numbers)
+- Query string values that may contain auth tokens (`?token=...`)
+- Debug-level logs in production builds
+
+## SSR / Next.js: Server-Side Logs
+
+For Next.js apps, server-side logs (API routes, Server Components, middleware) should use a Node.js-compatible structured logger like `pino`:
+
+```ts
+// lib/logger.ts (server-side only)
+import pino from 'pino';
+
+export const serverLogger = pino({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  ...(process.env.NODE_ENV !== 'production' && {
+    transport: { target: 'pino-pretty' },
+  }),
+});
+```
+
+Attach a `request_id` in middleware and forward it via response headers so client-side logs can be correlated with server logs:
+
+```ts
+// middleware.ts
+export function middleware(request: NextRequest) {
+  const requestId = crypto.randomUUID();
+  const response = NextResponse.next();
+  response.headers.set('x-request-id', requestId);
+  return response;
+}
+```\n\n<!-- b1CodingTool: Module Context [flutter] - best-practices.md -->\n# Flutter: Best Practices
 
 ## Widget Composition
 - **Extract early.** If a widget's `build()` method exceeds ~40 lines or nests more than 3 levels deep, extract subtrees into their own widget classes (not private methods — widget classes get their own element node and rebuild independently).
@@ -333,7 +1589,662 @@ test/
 | `pubspec.yaml` | Dependencies and assets |
 | `analysis_options.yaml` | Linting rules |
 | `l10n.yaml` | Localization config (if using `flutter_localizations`) |
-| `.env` / `dart_defines/` | Environment-specific config (never commit secrets) |\n\n<!-- b1CodingTool: Module Context [swift] - best-practices.md -->\n# Swift: Best Practices
+| `.env` / `dart_defines/` | Environment-specific config (never commit secrets) |\n\n<!-- b1CodingTool: Module Context [flutter] - dependency-management.md -->\n# Flutter: Dependency Management with pub
+
+## Overview
+
+Flutter uses **pub** — Dart's built-in package manager — exclusively. There is no alternative; all Flutter and Dart packages are distributed through [pub.dev](https://pub.dev). The `flutter pub` command wraps `dart pub` with Flutter-specific additions.
+
+## pubspec.yaml
+
+`pubspec.yaml` is the project manifest. It declares dependencies, dev dependencies, assets, and Flutter-specific config.
+
+```yaml
+name: my_app
+description: A Flutter application.
+version: 1.0.0+1          # semver+build_number (used for app store versioning)
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"  # Dart SDK constraint — always pin the lower bound
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^8.1.6
+  go_router: ^14.0.0
+  sentry_flutter: ^8.0.0
+  dio: ^5.4.0
+  logger: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  bloc_test: ^9.1.7
+  mocktail: ^1.0.4
+  build_runner: ^2.4.9    # required for code generation (json_serializable, freezed, etc.)
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/fonts/
+```
+
+## Version Constraints
+
+Pub uses semantic versioning. Choose the right constraint for each dependency:
+
+| Constraint | Meaning | Use when |
+|------------|---------|----------|
+| `^1.2.3` | `>=1.2.3 <2.0.0` | Most dependencies — allows patch and minor updates |
+| `>=1.0.0 <2.0.0` | Explicit range | When `^` doesn't express the range you need |
+| `1.2.3` | Exact pin | Rarely — only when a specific version is required |
+| `any` | No constraint | Never in production code |
+
+**Prefer `^` (caret) constraints.** They allow non-breaking updates while preventing major version jumps that may contain breaking changes.
+
+## pubspec.lock
+
+`pubspec.lock` records the exact resolved version of every dependency (direct and transitive). Always commit it to version control for apps. For publishable packages, do not commit it (pub.dev ignores it).
+
+```bash
+# pubspec.lock should be in .gitignore for packages, committed for apps
+```
+
+## Common Commands
+
+```bash
+flutter pub get               # Install dependencies from pubspec.yaml (updates lock if needed)
+flutter pub upgrade           # Upgrade all dependencies to latest allowed by constraints
+flutter pub upgrade --major-versions  # Upgrade constraints in pubspec.yaml to latest major
+flutter pub outdated          # Show which packages have newer versions available
+flutter pub add dio           # Add a dependency and run pub get
+flutter pub add --dev mocktail  # Add a dev dependency
+flutter pub remove dio        # Remove a dependency
+flutter pub run build_runner build  # Run code generation (one-shot)
+flutter pub run build_runner watch  # Run code generation (watch mode during development)
+dart pub publish              # Publish a package to pub.dev
+```
+
+## Code Generation
+
+Many popular Flutter packages (Freezed, json_serializable, injectable, auto_route) use `build_runner` to generate `.g.dart` or `.freezed.dart` files. These generated files should be **committed to version control** — they are part of your app's source, not build artifacts.
+
+```bash
+# One-shot generation (CI, after pulling changes)
+flutter pub run build_runner build --delete-conflicting-outputs
+
+# Watch mode during development
+flutter pub run build_runner watch --delete-conflicting-outputs
+```
+
+Add to your `.gitignore` only if you choose not to commit generated files (not recommended — it breaks `flutter pub get` for new contributors without an extra step):
+```
+# Only add these if you explicitly choose not to commit generated files
+# *.g.dart
+# *.freezed.dart
+```
+
+## Resolving Dependency Conflicts
+
+Pub resolves a single consistent set of package versions across all dependencies. If two packages require incompatible versions of a third package, pub will report a conflict.
+
+**Resolution strategies:**
+
+1. **Run `flutter pub upgrade`** — often a newer version of one of the conflicting packages has relaxed its constraint.
+2. **Check pub.dev** — look at each conflicting package's changelog to understand what version is needed.
+3. **Use `dependency_overrides`** — a last resort that forces a specific version regardless of constraints. Document why and plan to remove it.
+
+```yaml
+# pubspec.yaml — last resort only, always document
+dependency_overrides:
+  some_package: 2.3.1   # pinned because package_foo hasn't updated yet — see issue #123
+```
+
+## Checking Package Quality on pub.dev
+
+Before adding a dependency, check its pub.dev score:
+
+- **Pub points** — automated quality score (documentation, static analysis, platform support)
+- **Likes** — community endorsement
+- **Popularity** — usage across pub.dev packages
+- **Publisher verification** — `dart.dev` and `flutter.dev` verified publishers are first-party packages
+
+Prefer packages maintained by `flutter.dev`/`dart.dev` or well-maintained community packages with high pub points. Avoid packages with no activity in 12+ months for critical functionality.
+
+## Dependency Types
+
+| Type | Declared under | Included in release build |
+|------|---------------|--------------------------|
+| Regular | `dependencies:` | Yes |
+| Dev | `dev_dependencies:` | No (tests, code gen tools only) |
+| SDK | `sdk: flutter` | Bundled with Flutter SDK |
+
+Keep `dev_dependencies` clean — `build_runner`, test utilities, and linting tools belong there, never in `dependencies`.\n\n<!-- b1CodingTool: Module Context [flutter] - logging.md -->\n# Flutter: Logging Best Practices
+
+## Philosophy
+
+Good logs answer two questions without any additional context: **what happened**, and **why it matters**. In Flutter, logs serve three distinct audiences: the developer at a terminal, a crash reporting dashboard, and an AI agent analyzing a production incident.
+
+- **Structured over print statements.** `print("Login failed")` is invisible in production and unsearchable. A structured log event with level, context, and metadata is actionable.
+- **Strip sensitive data before production.** Debug logs in development may be verbose; production logs must never contain tokens, passwords, or raw PII.
+- **Crash context is everything.** The most valuable logs in mobile are the breadcrumbs recorded *before* a crash — they reconstruct the user journey without needing a repro.
+
+## Log Levels — When to Use Each
+
+| Level | Use for |
+|-------|---------|
+| `verbose` / `trace` | Low-level state dumps, widget lifecycle events. Development only. |
+| `debug` | Data flows, provider state changes, API response bodies. Development only. |
+| `info` | Normal lifecycle events: screen viewed, user action completed, API call succeeded. |
+| `warning` | Unexpected but recoverable: retry triggered, feature flag defaulted, optional permission denied. |
+| `error` | A specific operation failed: API returned error, local DB write failed, required resource missing. |
+| `wtf` (fatal) | Unrecoverable: app cannot continue, invariant violated. |
+
+## Setup: the `logger` Package
+
+```yaml
+# pubspec.yaml
+dependencies:
+  logger: ^2.0.0
+```
+
+Define a singleton logger at app level:
+
+```dart
+// lib/core/logging/app_logger.dart
+import 'package:flutter/foundation.dart';
+import 'package:logger/logger.dart';
+
+final appLogger = Logger(
+  level: kDebugMode ? Level.debug : Level.info,
+  printer: kDebugMode
+      ? PrettyPrinter(methodCount: 3, printTime: true)
+      : ProductionPrinter(),          // see below
+  filter: ProductionFilter(),         // only logs at >= level
+);
+
+/// JSON printer for production — structured and machine-readable.
+class ProductionPrinter extends LogPrinter {
+  @override
+  List<String> log(LogEvent event) {
+    final error = event.error;
+    return [
+      {
+        'level': event.level.name,
+        'message': event.message,
+        'timestamp': DateTime.now().toUtc().toIso8601String(),
+        if (error != null) 'error': error.toString(),
+        if (event.stackTrace != null) 'stack_trace': event.stackTrace.toString(),
+      }.toString(),
+    ];
+  }
+}
+```
+
+## Structured Logging Pattern
+
+Never log raw strings. Pass a structured map as the message so log aggregators and AI agents can parse it:
+
+```dart
+// Good
+appLogger.i({
+  'event': 'payment_initiated',
+  'order_id': order.id,
+  'amount': order.total,
+  'currency': order.currency,
+});
+
+// Bad
+appLogger.i('Payment initiated for order ${order.id}');
+```
+
+## Crash Reporting: Sentry
+
+Use `sentry_flutter` for production crash reporting. Sentry captures unhandled exceptions, attaches breadcrumbs, and stores them in a searchable dashboard.
+
+```yaml
+dependencies:
+  sentry_flutter: ^8.0.0
+```
+
+```dart
+// lib/main.dart
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = const String.fromEnvironment('SENTRY_DSN');
+      options.environment = const String.fromEnvironment('ENV', defaultValue: 'development');
+      options.tracesSampleRate = 0.2;      // 20% of sessions traced for performance
+      options.attachScreenshot = true;     // capture screenshot on crash
+    },
+    appRunner: () => runApp(const App()),
+  );
+}
+```
+
+## Bloc Observer: Log Every State Transition
+
+Register a global `BlocObserver` to log every event, state change, transition, and error across all Blocs and Cubits. This is the single highest-value logging addition for flutter_bloc apps.
+
+```dart
+// lib/core/logging/app_bloc_observer.dart
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'app_logger.dart';
+
+class AppBlocObserver extends BlocObserver {
+  @override
+  void onCreate(BlocBase bloc) {
+    super.onCreate(bloc);
+    appLogger.d({'event': 'bloc_created', 'bloc': bloc.runtimeType.toString()});
+  }
+
+  @override
+  void onEvent(Bloc bloc, Object? event) {
+    super.onEvent(bloc, event);
+    appLogger.d({'event': 'bloc_event', 'bloc': bloc.runtimeType.toString(), 'event_type': event.runtimeType.toString()});
+  }
+
+  @override
+  void onChange(BlocBase bloc, Change change) {
+    super.onChange(bloc, change);
+    appLogger.i({
+      'event': 'bloc_state_changed',
+      'bloc': bloc.runtimeType.toString(),
+      'from': change.currentState.runtimeType.toString(),
+      'to': change.nextState.runtimeType.toString(),
+    });
+  }
+
+  @override
+  void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
+    appLogger.e(
+      {'event': 'bloc_error', 'bloc': bloc.runtimeType.toString()},
+      error: error,
+      stackTrace: stackTrace,
+    );
+    super.onError(bloc, error, stackTrace);
+  }
+
+  @override
+  void onClose(BlocBase bloc) {
+    super.onClose(bloc);
+    appLogger.d({'event': 'bloc_closed', 'bloc': bloc.runtimeType.toString()});
+  }
+}
+```
+
+Register in `main.dart`:
+```dart
+void main() {
+  Bloc.observer = AppBlocObserver();
+  runApp(const App());
+}
+```
+
+## Navigation Logging
+
+Log every route change to reconstruct the user journey before a crash:
+
+```dart
+// lib/core/router/router.dart (go_router)
+final router = GoRouter(
+  observers: [AppRouteObserver()],
+  routes: [...],
+);
+
+class AppRouteObserver extends NavigatorObserver {
+  @override
+  void didPush(Route route, Route? previousRoute) {
+    appLogger.i({'event': 'screen_pushed', 'screen': route.settings.name});
+    Sentry.addBreadcrumb(Breadcrumb.navigation(
+      from: previousRoute?.settings.name,
+      to: route.settings.name,
+    ));
+  }
+
+  @override
+  void didPop(Route route, Route? previousRoute) {
+    appLogger.i({'event': 'screen_popped', 'screen': route.settings.name});
+  }
+}
+```
+
+## Network Request Logging
+
+Use a `Dio` interceptor (or equivalent) to log every outbound request and response:
+
+```dart
+class LoggingInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    appLogger.d({
+      'event': 'http_request',
+      'method': options.method,
+      'url': options.uri.toString(),
+    });
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    appLogger.i({
+      'event': 'http_response',
+      'method': response.requestOptions.method,
+      'url': response.requestOptions.uri.toString(),
+      'status_code': response.statusCode,
+    });
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    appLogger.e({
+      'event': 'http_error',
+      'method': err.requestOptions.method,
+      'url': err.requestOptions.uri.toString(),
+      'status_code': err.response?.statusCode,
+      'error': err.message,
+    }, error: err, stackTrace: err.stackTrace);
+    handler.next(err);
+  }
+}
+```
+
+## What to Log (and When)
+
+- **App lifecycle:** cold start, resume from background, push notification received
+- **Authentication:** login success/failure (with reason, never the credential), token refresh, logout
+- **Navigation:** every screen push/pop (breadcrumb for crash context)
+- **API calls:** every request (method, URL) and response (status code) — response body only at DEBUG
+- **Bloc transitions:** every state change via `AppBlocObserver`
+- **Errors:** every caught exception — log it before rethrowing or recovering
+- **User actions:** significant interactions (form submitted, purchase attempted, permission granted/denied)
+
+## What NOT to Log
+
+- Passwords, tokens, API keys — ever
+- Biometric or health data
+- Full response bodies containing PII
+- Debug-level logs in production builds (use `kDebugMode` / `ProductionFilter`)
+
+## Development: Flipper Integration
+
+In development, use `flipper_plugin_log` to view structured logs in the Flipper desktop tool without polluting the terminal:
+
+```yaml
+dev_dependencies:
+  flipper_plugin_log: ^0.1.0
+```
+
+This gives you a filterable, searchable log viewer during development with no production overhead.\n\n<!-- b1CodingTool: Module Context [flutter] - flutter-bloc.md -->\n# Flutter: State Management with flutter_bloc
+
+## Core Concepts
+
+`flutter_bloc` separates state management into three layers:
+
+- **Event** — an immutable description of something that happened (user action, data loaded, error received)
+- **Bloc** — receives events, runs business logic, emits new states
+- **State** — an immutable snapshot of what the UI should render
+
+For simple cases without events, use a **Cubit** instead — it exposes methods that directly emit states, skipping the event dispatch layer.
+
+```
+UI dispatches Event → Bloc maps Event → State → UI rebuilds
+UI calls method     → Cubit emits State         → UI rebuilds
+```
+
+**Rule of thumb:** Use `Cubit` when the state transitions are simple and linear. Use `Bloc` when you need to react to a stream of events, debounce/throttle input, or have complex branching logic.
+
+## Defining Events and States
+
+Use sealed classes (Dart 3+) for both events and states. Sealed classes give you exhaustive pattern matching in `switch` expressions.
+
+```dart
+// events
+sealed class AuthEvent {}
+final class AuthLoginRequested extends AuthEvent {
+  const AuthLoginRequested({required this.email, required this.password});
+  final String email;
+  final String password;
+}
+final class AuthLogoutRequested extends AuthEvent {}
+
+// states
+sealed class AuthState {}
+final class AuthInitial extends AuthState {}
+final class AuthLoading extends AuthState {}
+final class AuthAuthenticated extends AuthState {
+  const AuthAuthenticated(this.user);
+  final User user;
+}
+final class AuthFailure extends AuthState {
+  const AuthFailure(this.message);
+  final String message;
+}
+```
+
+## Writing a Bloc
+
+```dart
+class AuthBloc extends Bloc<AuthEvent, AuthState> {
+  AuthBloc({required AuthRepository authRepository})
+      : _authRepository = authRepository,
+        super(AuthInitial()) {
+    on<AuthLoginRequested>(_onLoginRequested);
+    on<AuthLogoutRequested>(_onLogoutRequested);
+  }
+
+  final AuthRepository _authRepository;
+
+  Future<void> _onLoginRequested(
+    AuthLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final user = await _authRepository.login(event.email, event.password);
+      emit(AuthAuthenticated(user));
+    } catch (e) {
+      emit(AuthFailure(e.toString()));
+    }
+  }
+
+  Future<void> _onLogoutRequested(
+    AuthLogoutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    await _authRepository.logout();
+    emit(AuthInitial());
+  }
+}
+```
+
+## Writing a Cubit
+
+```dart
+class CounterCubit extends Cubit<int> {
+  CounterCubit() : super(0);
+
+  void increment() => emit(state + 1);
+  void decrement() => emit(state - 1);
+  void reset() => emit(0);
+}
+```
+
+## Providing Blocs and Cubits
+
+Use `BlocProvider` to create and scope a Bloc to a widget subtree. The Bloc is automatically closed when the subtree is removed from the tree.
+
+```dart
+// Single bloc
+BlocProvider(
+  create: (context) => AuthBloc(authRepository: context.read()),
+  child: const LoginPage(),
+)
+
+// Multiple blocs at app root
+MultiBlocProvider(
+  providers: [
+    BlocProvider(create: (context) => AuthBloc(authRepository: context.read())),
+    BlocProvider(create: (context) => ThemeCubit()),
+  ],
+  child: const App(),
+)
+```
+
+Never create a Bloc inside a `build()` method — it will be recreated on every rebuild. Always use `BlocProvider` or create the Bloc above the widget tree.
+
+## Consuming State in the UI
+
+### BlocBuilder
+Rebuilds the widget when state changes. Use the `buildWhen` parameter to filter unnecessary rebuilds.
+
+```dart
+BlocBuilder<AuthBloc, AuthState>(
+  buildWhen: (previous, current) => previous != current,
+  builder: (context, state) {
+    return switch (state) {
+      AuthInitial()        => const LoginForm(),
+      AuthLoading()        => const CircularProgressIndicator(),
+      AuthAuthenticated()  => HomePage(user: state.user),
+      AuthFailure()        => ErrorView(message: state.message),
+    };
+  },
+)
+```
+
+### BlocListener
+Runs side effects (navigation, snackbars, dialogs) in response to state changes without rebuilding the widget tree.
+
+```dart
+BlocListener<AuthBloc, AuthState>(
+  listenWhen: (previous, current) => current is AuthFailure,
+  listener: (context, state) {
+    if (state is AuthFailure) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(state.message)),
+      );
+    }
+  },
+  child: const LoginForm(),
+)
+```
+
+### BlocConsumer
+Combines `BlocBuilder` and `BlocListener` when you need both UI rebuilds and side effects.
+
+```dart
+BlocConsumer<AuthBloc, AuthState>(
+  listenWhen: (_, current) => current is AuthAuthenticated || current is AuthFailure,
+  listener: (context, state) {
+    if (state is AuthAuthenticated) context.go('/home');
+  },
+  builder: (context, state) {
+    return switch (state) {
+      AuthLoading() => const CircularProgressIndicator(),
+      _             => const LoginForm(),
+    };
+  },
+)
+```
+
+**Rule:** Use `BlocListener` for side effects (navigation, toasts). Use `BlocBuilder` for UI. Never put `Navigator.push` or `ScaffoldMessenger` calls inside `builder`.
+
+## Reading Blocs Without Rebuilding
+
+Use `context.read<T>()` to dispatch events or call Cubit methods inside callbacks. Use `context.watch<T>()` only inside `build()` when you want the widget to rebuild on state changes (prefer `BlocBuilder` for clarity).
+
+```dart
+// Good — dispatching from a callback
+ElevatedButton(
+  onPressed: () => context.read<AuthBloc>().add(AuthLogoutRequested()),
+  child: const Text('Log out'),
+)
+
+// Bad — context.watch inside build() is harder to scope than BlocBuilder
+// Use BlocBuilder instead
+```
+
+## Testing
+
+Test Blocs and Cubits with `bloc_test` — it provides a clean DSL for arranging state, acting, and asserting emitted states.
+
+```dart
+import 'package:bloc_test/bloc_test.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  group('AuthBloc', () {
+    late AuthRepository mockRepository;
+
+    setUp(() {
+      mockRepository = FakeAuthRepository();
+    });
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [AuthLoading, AuthAuthenticated] on successful login',
+      build: () => AuthBloc(authRepository: mockRepository),
+      act: (bloc) => bloc.add(
+        const AuthLoginRequested(email: 'a@b.com', password: 'pass'),
+      ),
+      expect: () => [
+        isA<AuthLoading>(),
+        isA<AuthAuthenticated>(),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [AuthLoading, AuthFailure] on failed login',
+      build: () => AuthBloc(authRepository: FakeFailingAuthRepository()),
+      act: (bloc) => bloc.add(
+        const AuthLoginRequested(email: 'bad@b.com', password: 'wrong'),
+      ),
+      expect: () => [isA<AuthLoading>(), isA<AuthFailure>()],
+    );
+  });
+}
+```
+
+## Best Practices
+
+- **Never put business logic in the UI.** The widget dispatches an event; the Bloc decides what to do.
+- **Keep Blocs focused.** One Bloc per feature or domain concept. A `CartBloc` should not know about authentication.
+- **States must be immutable.** Use `final` fields and `const` constructors. Use `copyWith` for partial updates.
+- **One Bloc instance per subtree.** Don't create a new Bloc every time a page is pushed — provide it above the navigator or use `BlocProvider.value` to pass an existing instance down.
+- **Close Blocs you create manually.** If you instantiate a Bloc outside of `BlocProvider`, call `bloc.close()` in `dispose()`. `BlocProvider` handles this automatically.
+- **Use `Equatable` or override `==`** on state/event classes if you need value-based comparison in `buildWhen` / `listenWhen`. Without it, every new instance is considered a new state even if the data is identical.
+
+```dart
+// With Equatable
+final class AuthAuthenticated extends AuthState with EquatableMixin {
+  const AuthAuthenticated(this.user);
+  final User user;
+
+  @override
+  List<Object?> get props => [user];
+}
+```
+
+## Directory Placement
+
+Bloc files live in the `presentation/providers/` directory of each feature (following the Flutter directory-structure convention), or in a dedicated `bloc/` subdirectory for larger features:
+
+```
+features/auth/
+  presentation/
+    bloc/                   # or providers/
+      auth_bloc.dart        # Bloc class
+      auth_event.dart       # sealed event hierarchy
+      auth_state.dart       # sealed state hierarchy
+    pages/
+      login_page.dart
+    widgets/
+      login_form.dart
+```\n\n<!-- b1CodingTool: Module Context [swift] - best-practices.md -->\n# Swift: Best Practices
 
 ## Design Patterns
 - **Protocol-Oriented Programming (POP):** Prefer protocols and extensions for composition over deep class inheritance.
@@ -404,7 +2315,931 @@ Project/
 ## Development
 - Use `.package(path: "../LocalPackage")` for internal modularization during active development.
 - Run `swift package resolve` to fetch dependencies.
-- Run `swift package update` to update to the latest compatible versions.\n\n<!-- b1CodingTool: Module Context [django] - best-practices.md -->\n# Django: Best Practices
+- Run `swift package update` to update to the latest compatible versions.\n\n<!-- b1CodingTool: Module Context [fastapi] - best-practices.md -->\n# FastAPI: Best Practices
+
+## Routers & Route Design
+- Split routes into **APIRouter** instances, one per resource. Mount all routers in a central `main.py` — never define routes directly on the `FastAPI()` app instance.
+- Use meaningful HTTP methods: `GET` for reads, `POST` for creates, `PUT`/`PATCH` for updates, `DELETE` for deletes. Don't use `POST` for everything.
+- Version your API from day one: prefix routers with `/api/v1/`.
+- Return the correct HTTP status code: `201` for creates, `204` for deletes with no body, `422` is automatic for validation errors.
+
+```python
+# Good
+router = APIRouter(prefix="/users", tags=["users"])
+
+@router.post("/", response_model=UserResponse, status_code=201)
+async def create_user(payload: UserCreate, db: AsyncSession = Depends(get_db)) -> User:
+    return await user_service.create(db, payload)
+```
+
+## Dependency Injection
+- Use `Depends()` for everything that crosses request boundaries: database sessions, authenticated users, pagination params, feature flags.
+- Define the DB session as a generator dependency so SQLAlchemy sessions are always closed on teardown — even on errors.
+- Chain dependencies: an `get_current_user` dependency can itself depend on `get_db`, forming a clean hierarchy.
+
+```python
+# core/dependencies.py
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session_factory() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    user = await auth_service.verify_token(db, token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return user
+```
+
+## SQLAlchemy 2.x Async
+- Always use `async with async_session_factory() as session:` — never the sync `Session`.
+- Use the 2.x `select()` construct, not the legacy `.query()` ORM API.
+- Use `session.execute(select(Model).where(...))` and call `.scalars().all()` or `.scalar_one_or_none()` on the result.
+- Use `session.scalar(select(Model)...)` for single-row fetches — it's more concise than `.execute(...).scalar_one()`.
+- Wrap multi-step writes in a single transaction: commit once at the end (or let the session dependency handle it).
+
+```python
+# Good — SQLAlchemy 2.x style
+async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
+    result = await db.execute(select(User).where(User.email == email))
+    return result.scalar_one_or_none()
+
+# Bad — legacy 1.x style
+def get_user(db: Session, user_id: int):
+    return db.query(User).filter(User.id == user_id).first()
+```
+
+## Pydantic v2 Schemas
+- Use Pydantic models as request/response schemas — never pass raw dicts across the API boundary.
+- Separate schemas by intent: `UserCreate` (input), `UserResponse` (output), `UserUpdate` (partial input). Don't reuse one schema for all three.
+- Use `model_config = ConfigDict(from_attributes=True)` on response schemas so they can be constructed directly from ORM objects.
+- Use `model_validator` and `field_validator` for cross-field validation instead of custom logic in route handlers.
+
+```python
+from pydantic import BaseModel, ConfigDict, EmailStr
+
+class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    email: EmailStr
+    full_name: str
+    is_active: bool
+```
+
+## Error Handling
+- Raise `HTTPException` for expected, client-facing errors (404, 403, 409). Include a descriptive `detail` string.
+- Register a global exception handler for unexpected errors — log the full traceback and return a generic `500` response. Never leak stack traces to clients.
+- Use custom exception classes for domain errors; catch them in a middleware or exception handler and convert to `HTTPException`.
+
+```python
+@app.exception_handler(DomainError)
+async def domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
+    return JSONResponse(status_code=400, content={"detail": str(exc)})
+```
+
+## Security
+- Never store secrets in source code — use environment variables loaded via `pydantic-settings`.
+- Hash passwords with **bcrypt** via `passlib`. Never store plaintext passwords.
+- Set `CORS` origins explicitly — never use `allow_origins=["*"]` in production.
+- Use `HTTPBearer` or `OAuth2PasswordBearer` for auth token extraction; validate JWTs with `python-jose` or `PyJWT`.
+
+## Background Tasks & Async
+- Use FastAPI's `BackgroundTasks` for fire-and-forget work that doesn't need a result (sending emails, webhooks).
+- For heavy or long-running work, use a task queue (Celery, ARQ, or Dramatiq) — don't block the event loop.
+- Never mix sync and async code without care: calling a blocking I/O function inside an `async def` route will block the entire event loop. Use `run_in_executor` or make the dependency sync.
+
+## Testing
+- Use `pytest` with `pytest-asyncio` for async test functions.
+- Use `httpx.AsyncClient` with `ASGITransport` for integration tests — it runs the full ASGI stack without a real server.
+- Use a dedicated test database and roll back each test in a transaction to keep tests isolated.
+- Mock external services at the HTTP boundary (httpx transport), not deep in service functions.
+
+```python
+import pytest
+from httpx import ASGITransport, AsyncClient
+from app.main import app
+
+@pytest.mark.asyncio
+async def test_create_user():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post("/api/v1/users/", json={"email": "a@b.com", "password": "secret"})
+    assert response.status_code == 201
+    assert response.json()["email"] == "a@b.com"
+```\n\n<!-- b1CodingTool: Module Context [fastapi] - conventions.md -->\n# FastAPI: Coding Conventions
+
+## Python Style
+- Follow **PEP 8**. Use **Ruff** for linting and formatting (it replaces Black, isort, and Flake8 in one tool).
+- Type-annotate all function signatures. Use `from __future__ import annotations` at the top of every file.
+- Use `X | Y` union syntax (Python 3.10+) over `Optional[X]` or `Union[X, Y]`.
+- Return type annotations on route handlers must match the `response_model` — FastAPI validates the response against it.
+
+## Import Order (Ruff / isort groups)
+1. Standard library
+2. FastAPI and Pydantic
+3. Third-party packages (SQLAlchemy, etc.)
+4. Local app imports
+
+```python
+from __future__ import annotations
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.dependencies import get_current_user, get_db
+from app.features.users.models import User
+```
+
+## Naming
+| Entity | Convention | Example |
+|--------|-----------|---------|
+| Modules / files | `snake_case.py` | `user_service.py`, `auth_router.py` |
+| Classes (models, schemas) | `PascalCase` | `User`, `UserCreate`, `UserResponse` |
+| Functions / methods | `snake_case` | `get_user_by_email`, `create_access_token` |
+| Route handler functions | `<verb>_<resource>` | `create_user`, `get_user`, `delete_post` |
+| Pydantic schemas (input) | `<Model>Create` / `<Model>Update` | `UserCreate`, `PostUpdate` |
+| Pydantic schemas (output) | `<Model>Response` | `UserResponse`, `PostResponse` |
+| SQLAlchemy models | singular `PascalCase` | `User`, `Post`, `Comment` |
+| DB table names | `snake_case`, plural | `users`, `blog_posts` |
+| Constants | `SCREAMING_SNAKE_CASE` | `ACCESS_TOKEN_EXPIRE_MINUTES` |
+| Dependencies | `get_<thing>` | `get_db`, `get_current_user` |
+
+## Route Handler Signatures
+- Declare path/query/body parameters using **type annotations** — FastAPI derives them automatically.
+- Use `Annotated[T, Depends(...)]` (the newer style) over `param: T = Depends(...)` for cleaner signatures.
+- Keep route handlers thin — they should validate input, call a service function, and return the result. No business logic in handlers.
+
+```python
+from typing import Annotated
+
+CurrentUser = Annotated[User, Depends(get_current_user)]
+DBSession = Annotated[AsyncSession, Depends(get_db)]
+
+@router.get("/{user_id}", response_model=UserResponse)
+async def get_user(user_id: int, db: DBSession, _: CurrentUser) -> User:
+    user = await user_service.get_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+```
+
+## SQLAlchemy Models
+- Define all models with a `DeclarativeBase` subclass. Use `Mapped[T]` and `mapped_column()` (SQLAlchemy 2.x syntax) — not the legacy `Column()` API.
+- Always define `__tablename__`.
+- Use `created_at` / `updated_at` on every model with `server_default=func.now()` and `onupdate=func.now()`.
+
+```python
+from sqlalchemy import String, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from datetime import datetime
+
+class Base(DeclarativeBase):
+    pass
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String(255))
+    is_active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
+```
+
+## Settings
+- Use `pydantic-settings` (`BaseSettings`) for all configuration. Never read `os.environ` directly in application code.
+- Define a single `Settings` instance and import it where needed — don't instantiate `Settings()` in multiple places.
+
+```python
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    database_url: str
+    secret_key: str
+    access_token_expire_minutes: int = 30
+
+settings = Settings()
+```\n\n<!-- b1CodingTool: Module Context [fastapi] - directory-structure.md -->\n# FastAPI: Directory Structure
+
+## Recommended Layout
+
+```
+project_root/
+├── pyproject.toml             # Project metadata, dependencies (uv or Poetry), tool config
+├── .env                       # Local secrets — never commit
+├── alembic.ini                # Alembic migration config
+├── alembic/
+│   ├── env.py                 # Alembic async engine setup
+│   └── versions/              # Auto-generated migration files
+├── app/
+│   ├── main.py                # FastAPI() instance, router mounts, lifespan handler
+│   ├── core/
+│   │   ├── config.py          # pydantic-settings Settings class (single source of truth)
+│   │   ├── database.py        # async engine + async_session_factory
+│   │   ├── dependencies.py    # Shared Depends: get_db, get_current_user, pagination
+│   │   └── security.py        # JWT creation/verification, password hashing
+│   ├── features/
+│   │   ├── users/
+│   │   │   ├── models.py      # SQLAlchemy ORM models
+│   │   │   ├── schemas.py     # Pydantic request/response schemas
+│   │   │   ├── service.py     # Business logic (async functions, no HTTP concerns)
+│   │   │   ├── router.py      # APIRouter — route handlers only, calls service
+│   │   │   └── dependencies.py # Feature-local Depends (e.g. get_user_or_404)
+│   │   └── posts/
+│   │       └── ...            # Same structure as users/
+│   └── middleware/            # Custom Starlette middleware (logging, tracing, etc.)
+└── tests/
+    ├── conftest.py            # Fixtures: test DB, async client, factories
+    ├── unit/
+    │   └── features/
+    │       └── users/
+    │           └── test_user_service.py
+    └── integration/
+        └── features/
+            └── users/
+                └── test_user_router.py
+```
+
+## Application Entrypoint
+
+```python
+# app/main.py
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from app.core.database import engine, Base
+from app.features.users.router import router as users_router
+from app.features.posts.router import router as posts_router
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: run migrations or create tables in dev
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    # Shutdown: dispose connection pool
+    await engine.dispose()
+
+app = FastAPI(title="My API", version="1.0.0", lifespan=lifespan)
+
+app.include_router(users_router, prefix="/api/v1")
+app.include_router(posts_router, prefix="/api/v1")
+```
+
+## Database Setup
+
+```python
+# app/core/database.py
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from app.core.config import settings
+
+engine = create_async_engine(settings.database_url, echo=False, pool_pre_ping=True)
+async_session_factory = async_sessionmaker(engine, expire_on_commit=False)
+```
+
+## Feature Module Pattern
+
+Each feature owns its **models**, **schemas**, **service**, and **router**. The router calls the service; the service calls the DB. Nothing skips layers.
+
+```
+users/
+  models.py   → SQLAlchemy ORM (database shape)
+  schemas.py  → Pydantic models (API shape)
+  service.py  → async business logic (no HTTP knowledge)
+  router.py   → HTTP handlers (no business logic)
+```
+
+## Migrations (Alembic)
+- Configure Alembic to use the async engine via `run_sync`.
+- Always generate migrations with a descriptive name: `alembic revision --autogenerate -m "add_bio_to_users"`.
+- Review generated migration files before committing — autogenerate can miss constraints or produce destructive changes.
+- Never hand-edit migration files unless resolving a conflict or squash.
+
+## Key Files Reference
+| File | Purpose |
+|------|---------|
+| `app/core/config.py` | Single `Settings` instance — import this everywhere |
+| `app/core/database.py` | Engine and session factory |
+| `app/core/dependencies.py` | `get_db`, `get_current_user` — used across all features |
+| `app/core/security.py` | JWT, bcrypt helpers |
+| `tests/conftest.py` | Async test client, DB fixtures, factory setup |
+| `alembic/env.py` | Must import all models so autogenerate detects them |\n\n<!-- b1CodingTool: Module Context [fastapi] - dependency-management.md -->\n# Python Dependency Management: uv vs Poetry
+
+## Overview
+
+Two tools dominate modern Python dependency management for FastAPI projects: **uv** and **Poetry**. Both manage virtual environments, dependencies, and lockfiles, but they differ significantly in philosophy, performance, and ecosystem alignment.
+
+## uv
+
+**uv** is a Rust-based Python package manager from Astral (makers of Ruff). It is a drop-in replacement for `pip`, `pip-tools`, `virtualenv`, and optionally `pyenv`.
+
+### What uv Does Well
+- **Speed.** Package resolution and installation are 10–100× faster than pip or Poetry. Large dependency trees (FastAPI + SQLAlchemy + Alembic + Pydantic) resolve in under a second.
+- **Standard compliance.** Uses `pyproject.toml` with the PEP 621 `[project]` table — no vendor-specific format. The resulting `pyproject.toml` is readable by any standards-compliant tool.
+- **Python version management.** `uv python install 3.12` replaces pyenv — one tool for both the interpreter and packages.
+- **Lockfile.** `uv.lock` pins exact versions for reproducible installs across environments.
+- **Serverless-friendly.** `uv sync --no-dev` installs only production dependencies — ideal for slim Docker images and Lambda layers.
+
+### Common uv Commands
+```bash
+uv python install 3.12            # Install Python version
+uv init                           # Create new project with pyproject.toml
+uv add fastapi "uvicorn[standard]"  # Add dependencies
+uv add --dev pytest pytest-asyncio httpx  # Add dev dependencies
+uv sync                           # Install all deps from lockfile
+uv sync --no-dev                  # Install prod deps only (Docker/CI)
+uv run uvicorn app.main:app --reload   # Run dev server
+uv run pytest                     # Run tests
+uv lock                           # Update lockfile without installing
+```
+
+### pyproject.toml with uv
+```toml
+[project]
+name = "my-fastapi-app"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.29",
+    "sqlalchemy[asyncio]>=2.0",
+    "alembic>=1.13",
+    "asyncpg>=0.29",          # async Postgres driver
+    "pydantic-settings>=2.0",
+    "passlib[bcrypt]>=1.7",
+    "python-jose[cryptography]>=3.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "httpx>=0.27",            # for AsyncClient in tests
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+
+[tool.uv]
+# uv-specific settings (optional)
+```
+
+### When to Use uv
+- New projects where you control the toolchain
+- Serverless or containerized deployments where lean images and fast `pip install` matter
+- Teams that want a single tool (Python version + packages)
+- CI pipelines where install speed is a bottleneck
+- This project (b1CodingTool) uses `uv` — use it here by default
+
+---
+
+## Poetry
+
+**Poetry** is a Python packaging and dependency management tool that predates uv. It introduced the developer-friendly `pyproject.toml` workflow before PEP 621 was finalized, using its own `[tool.poetry]` section.
+
+### What Poetry Does Well
+- **Mature ecosystem.** Widely adopted — many existing FastAPI projects, tutorials, and CI examples use Poetry.
+- **Publishing.** `poetry publish` builds and uploads packages to PyPI smoothly — useful if your FastAPI project is also a distributed library (e.g., a shared SDK).
+- **Explicit dependency groups.** `[tool.poetry.group.dev.dependencies]` is a well-understood pattern across the community.
+- **Plugin system.** Community plugins extend Poetry for dynamic versioning, dotenv injection, etc.
+
+### Common Poetry Commands
+```bash
+poetry init                             # Create pyproject.toml interactively
+poetry add fastapi "uvicorn[standard]"  # Add dependency
+poetry add --group dev pytest httpx     # Add dev dependency
+poetry install                          # Install from poetry.lock
+poetry install --only main              # Prod deps only (Docker)
+poetry run uvicorn app.main:app --reload
+poetry run pytest
+poetry update                           # Update all within constraints
+poetry export -f requirements.txt --without-hashes > requirements.txt
+```
+
+### pyproject.toml with Poetry
+```toml
+[tool.poetry]
+name = "my-fastapi-app"
+version = "0.1.0"
+description = ""
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.111"
+uvicorn = {extras = ["standard"], version = "^0.29"}
+sqlalchemy = {extras = ["asyncio"], version = "^2.0"}
+alembic = "^1.13"
+asyncpg = "^0.29"
+pydantic-settings = "^2.0"
+passlib = {extras = ["bcrypt"], version = "^1.7"}
+python-jose = {extras = ["cryptography"], version = "^3.3"}
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+pytest-asyncio = "^0.23"
+httpx = "^0.27"
+ruff = "^0.4"
+mypy = "^1.10"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+```
+
+### When to Use Poetry
+- Existing projects already using Poetry — don't migrate without a clear reason
+- Teams already familiar with Poetry
+- When publishing your FastAPI app as a Python package to PyPI
+- When a third-party deployment platform (some PaaS services) has built-in Poetry support
+
+---
+
+## Comparison Summary
+
+| | uv | Poetry |
+|---|---|---|
+| **Install speed** | 10–100× faster | Baseline |
+| **Python version mgmt** | Built-in (`uv python`) | Requires pyenv separately |
+| **pyproject.toml format** | PEP 621 standard | `[tool.poetry]` (non-standard) |
+| **Lockfile** | `uv.lock` | `poetry.lock` |
+| **Docker layer caching** | Excellent (`uv sync --no-dev`) | Good (`poetry install --only main`) |
+| **Package publishing** | `uv publish` (basic) | `poetry publish` (polished) |
+| **Maturity** | Newer (stable since 2024) | Mature (since 2018) |
+| **Ecosystem adoption** | Rapidly growing | Widely adopted |
+
+## Docker Integration
+
+Both tools work well in Docker. The key is to install only production dependencies in the final image.
+
+**With uv (recommended):**
+```dockerfile
+FROM python:3.12-slim
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+WORKDIR /app
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev   # install from lockfile, prod only
+COPY . .
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+```
+
+**With Poetry:**
+```dockerfile
+FROM python:3.12-slim
+RUN pip install poetry
+WORKDIR /app
+COPY pyproject.toml poetry.lock ./
+RUN poetry install --only main --no-root
+COPY . .
+CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+```
+
+## Recommendation
+
+**Use uv for new projects.** It is faster, follows open standards, handles Python version management, and produces lean Docker images. The ecosystem has converged on it as the modern default for FastAPI projects.
+
+**Keep Poetry for existing projects** that already use it — migration has no functional benefit and introduces risk.
+
+In either case, **commit the lockfile** (`uv.lock` or `poetry.lock`) to version control. Without it, installs across environments are not reproducible.\n\n<!-- b1CodingTool: Module Context [fastapi] - logging.md -->\n# FastAPI: Logging Best Practices
+
+## Philosophy
+
+Good logs answer two questions without any additional context: **what happened**, and **why it matters**. Every log line should be self-contained enough that a human or AI agent reading it in isolation — with no knowledge of the codebase — can understand the event and act on it.
+
+- **Structured over narrative.** Key-value pairs beat prose. `{"event": "db_query_slow", "table": "orders", "duration_ms": 4200, "query": "SELECT ..."}` is queryable; `"Slow query on orders"` is not.
+- **Correlation IDs everywhere.** Every request gets a UUID. Every log line for that request carries it. This is the thread that lets you reconstruct a full request trace from fragmented log lines.
+- **Async-safe context.** Python's `logging` module uses thread-local storage — in an async app, you need `contextvars`-based context binding so log context doesn't leak between concurrent requests.
+
+## Log Levels — When to Use Each
+
+| Level | Use for |
+|-------|---------|
+| `DEBUG` | Internal state, SQL query text, deserialized payloads. Disabled in production by default. |
+| `INFO` | Normal lifecycle events: request received/completed, background task started, user authenticated. |
+| `WARNING` | Unexpected but recoverable: retry triggered, deprecated endpoint called, config fallback used. |
+| `ERROR` | A specific operation failed: DB write failed, external API returned 5xx, unhandled exception in a route. |
+| `CRITICAL` | Application cannot continue: DB unreachable, required env var missing, unrecoverable startup failure. |
+
+## Setup: structlog
+
+`structlog` integrates with Python's `logging` module and produces JSON output suitable for log aggregators (CloudWatch, Datadog, Loki).
+
+```bash
+uv add structlog
+```
+
+```python
+# app/core/logging.py
+import logging
+import structlog
+
+def configure_logging(debug: bool = False) -> None:
+    shared_processors = [
+        structlog.contextvars.merge_contextvars,      # injects request-scoped context
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.add_logger_name,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+    ]
+
+    if debug:
+        renderer = structlog.dev.ConsoleRenderer()    # human-friendly in dev
+    else:
+        renderer = structlog.processors.JSONRenderer()  # machine-readable in prod
+
+    structlog.configure(
+        processors=shared_processors + [
+            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+        ],
+        wrapper_class=structlog.stdlib.BoundLogger,
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+    )
+
+    formatter = structlog.stdlib.ProcessorFormatter(
+        processor=renderer,
+        foreign_pre_chain=shared_processors,
+    )
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+
+    root_logger = logging.getLogger()
+    root_logger.handlers = [handler]
+    root_logger.setLevel(logging.DEBUG if debug else logging.INFO)
+
+    # SQLAlchemy query logging — debug only
+    logging.getLogger("sqlalchemy.engine").setLevel(
+        logging.INFO if debug else logging.WARNING
+    )
+```
+
+Call from `main.py`:
+```python
+from app.core.config import settings
+from app.core.logging import configure_logging
+
+configure_logging(debug=settings.debug)
+```
+
+## Correlation IDs via Middleware
+
+Bind a `request_id` to every request using `contextvars` so all log calls within that request automatically include it.
+
+```python
+# app/middleware/logging.py
+import time
+import uuid
+import structlog
+from starlette.middleware.base import BaseHTTPMiddleware
+from structlog.contextvars import clear_contextvars, bind_contextvars
+
+logger = structlog.get_logger(__name__)
+
+class RequestLoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        clear_contextvars()
+        request_id = request.headers.get("x-request-id", str(uuid.uuid4()))
+        bind_contextvars(
+            request_id=request_id,
+            method=request.method,
+            path=request.url.path,
+        )
+
+        logger.info("request_started")
+        start = time.perf_counter()
+
+        try:
+            response = await call_next(request)
+        except Exception:
+            logger.exception("request_unhandled_exception")
+            raise
+
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        bind_contextvars(status_code=response.status_code, duration_ms=duration_ms)
+        level = "warning" if response.status_code >= 400 else "info"
+        getattr(logger, level)("request_finished")
+
+        response.headers["x-request-id"] = request_id
+        return response
+```
+
+Register in `main.py`:
+```python
+app.add_middleware(RequestLoggingMiddleware)
+```
+
+## Logging in Application Code
+
+```python
+import structlog
+
+logger = structlog.get_logger(__name__)
+
+async def create_order(db: AsyncSession, user_id: int, payload: OrderCreate) -> Order:
+    log = logger.bind(user_id=user_id, item_count=len(payload.items))
+    log.info("order_creation_started")
+
+    try:
+        order = await order_repo.create(db, user_id=user_id, items=payload.items)
+    except IntegrityError as e:
+        log.error("order_creation_failed", reason="db_integrity_error", detail=str(e))
+        raise
+
+    log.info("order_created", order_id=str(order.id), total=float(order.total))
+    return order
+```
+
+## Logging Dependency Injection
+
+Inject a pre-bound logger as a FastAPI dependency so route handlers get a logger already enriched with authenticated user context:
+
+```python
+# app/core/dependencies.py
+import structlog
+from structlog.contextvars import bind_contextvars
+
+async def get_logger(current_user: User = Depends(get_current_user)):
+    bind_contextvars(user_id=str(current_user.id), user_email=current_user.email)
+    return structlog.get_logger()
+```
+
+```python
+@router.post("/orders/", response_model=OrderResponse, status_code=201)
+async def create_order(
+    payload: OrderCreate,
+    db: DBSession,
+    logger=Depends(get_logger),
+):
+    logger.info("order_endpoint_called", item_count=len(payload.items))
+    return await order_service.create_order(db, payload)
+```
+
+## What to Log (and When)
+
+**Request lifecycle:**
+- Request received (method, path, user_id once authenticated)
+- Request completed (status_code, duration_ms)
+- Every unhandled exception (full traceback)
+
+**Business events:**
+- Authentication success and failure (failure reason, never the password)
+- State transitions on important entities (`order.status: pending → paid`)
+- Every external HTTP call (method, url, status_code, duration_ms)
+
+**Database:**
+- Slow queries (configure SQLAlchemy to log queries exceeding a threshold)
+- Connection pool exhaustion or timeout
+
+**Background tasks:**
+- Task enqueued (task_name, task_id, arguments summary)
+- Task started, succeeded, failed (with duration and error detail)
+
+**Errors:**
+- Every `except` block that suppresses an exception must log it at WARNING or ERROR
+- Never silently swallow exceptions
+
+## What NOT to Log
+
+- Passwords, tokens, API keys, secrets — ever
+- Raw `Authorization` header values
+- Full PII (log user_id, not name + address + DOB together)
+- High-frequency DEBUG noise left enabled in production
+
+## SQLAlchemy Slow Query Logging
+
+```python
+# app/core/database.py
+import logging
+import time
+from sqlalchemy import event
+
+slow_query_logger = logging.getLogger("sqlalchemy.slow")
+SLOW_QUERY_THRESHOLD_MS = 500
+
+@event.listens_for(engine.sync_engine, "before_cursor_execute")
+def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+    conn.info["query_start"] = time.perf_counter()
+
+@event.listens_for(engine.sync_engine, "after_cursor_execute")
+def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+    duration_ms = round((time.perf_counter() - conn.info["query_start"]) * 1000, 2)
+    if duration_ms > SLOW_QUERY_THRESHOLD_MS:
+        slow_query_logger.warning(
+            "slow_query",
+            extra={"duration_ms": duration_ms, "statement": statement[:500]},
+        )
+```
+
+## Useful Log Schema for AI Debugging
+
+Every log line should ideally contain:
+
+```json
+{
+  "timestamp": "2026-04-06T14:32:01.123Z",
+  "level": "error",
+  "logger": "app.features.orders.service",
+  "event": "order_creation_failed",
+  "request_id": "a1b2c3d4-...",
+  "user_id": "42",
+  "item_count": 3,
+  "reason": "db_integrity_error",
+  "detail": "duplicate key value violates unique constraint ...",
+  "exc_info": "Traceback (most recent call last): ..."
+}
+```
+
+A log stream with this shape can be filtered, grouped, and summarized by an AI agent with a single query: *"show me all order_creation_failed events in the last 24 hours, grouped by reason."*\n\n<!-- b1CodingTool: Module Context [fastapi] - serverless.md -->\n# FastAPI: Serverless Deployments
+
+## Overview
+FastAPI is an ASGI application. Serverless platforms (AWS Lambda, Google Cloud Run, Azure Container Apps) can run it, but they require adapting the standard ASGI lifecycle to fit a stateless, ephemeral execution model.
+
+## ASGI Adapters
+
+### AWS Lambda — Mangum
+Use **Mangum** to wrap the FastAPI app as a Lambda handler:
+
+```python
+# app/main.py
+from fastapi import FastAPI
+from mangum import Mangum
+
+app = FastAPI()
+
+# ... routers, middleware, etc.
+
+handler = Mangum(app, lifespan="on")  # "on" runs FastAPI lifespan events
+```
+
+Deploy with an API Gateway (HTTP API or REST API) trigger. Mangum translates API Gateway events into ASGI scope/receive/send.
+
+```toml
+# pyproject.toml — add mangum
+[project.dependencies]
+mangum = ">=0.17"
+```
+
+### Google Cloud Run / Azure Container Apps
+These platforms run a container that receives HTTP traffic directly — no adapter needed. Just run the ASGI server (Uvicorn) inside the container:
+
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY . .
+RUN pip install uv && uv sync --no-dev
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+```
+
+Cloud Run scales to zero between requests, so treat it as serverless for cold-start purposes even though it's container-based.
+
+## Cold Starts
+
+**What is a cold start?** The first request to a new instance (Lambda or container) must initialize the runtime, import your modules, and run your `lifespan` startup logic before handling the request. This adds hundreds of milliseconds to the first request.
+
+**Minimize cold start time:**
+- Keep dependencies lean. Every package you import adds to startup time.
+- Move expensive imports inside functions if they're not used on every request.
+- Use Lambda Snapstart (Java) or Lambda SnapStart alternatives carefully — Python doesn't have a direct equivalent, but keeping the package small helps.
+- On Lambda: set memory high enough (1024MB+) — Lambda allocates CPU proportionally to memory. More memory = faster startup.
+- On Cloud Run: set `min-instances: 1` for latency-sensitive services to keep a warm instance alive.
+
+## Database Connections — The Critical Problem
+
+Standard SQLAlchemy connection pools are **per-process**. In serverless environments, each cold start creates a new process with a new pool. Under concurrent load, this exhausts Postgres `max_connections` rapidly.
+
+### Solution 1: External Connection Pooler (Recommended for Production)
+Place **PgBouncer** or **RDS Proxy** (AWS) between your app and Postgres. The app connects to the pooler, which maintains a fixed pool of real Postgres connections.
+
+```python
+# app/core/database.py — serverless-safe engine config
+engine = create_async_engine(
+    settings.database_url,  # points to PgBouncer/RDS Proxy, not Postgres directly
+    pool_size=1,            # one connection per Lambda instance
+    max_overflow=0,         # no overflow — pooler handles concurrency
+    pool_pre_ping=True,     # verify connection health before use
+    pool_recycle=300,       # recycle connections every 5 min
+)
+```
+
+### Solution 2: NullPool (Simple but Less Efficient)
+Disable the connection pool entirely. Each request opens and closes its own connection. Acceptable for low-traffic functions; too slow under load.
+
+```python
+from sqlalchemy.pool import NullPool
+
+engine = create_async_engine(
+    settings.database_url,
+    poolclass=NullPool,
+)
+```
+
+### Solution 3: Serverless-Native Databases
+For greenfield projects, consider databases designed for serverless connection patterns:
+- **Neon** (serverless Postgres with connection pooling built in)
+- **PlanetScale** (serverless MySQL)
+- **Supabase** (Postgres with Supavisor pooler)
+
+These handle connection pooling at the infrastructure level, removing the problem entirely.
+
+## Stateless Design
+
+Serverless functions must not rely on in-process state between requests. Any state stored in a module-level variable may or may not exist on the next request (different instance, or instance was recycled).
+
+- **Never** store user sessions, request counts, or mutable cache in module-level variables.
+- Use **Redis** (Upstash, ElastiCache) for shared ephemeral state (rate limiting, sessions, caches).
+- Use **S3 / GCS / Blob Storage** for file storage — never write to the local filesystem (Lambda's `/tmp` is ephemeral and not shared).
+- Use **SQS / Pub/Sub** for background work instead of FastAPI `BackgroundTasks` — background tasks run in the same process and will be killed when the instance is recycled.
+
+## Lifespan Events in Serverless
+
+FastAPI's `lifespan` handler runs **once per cold start**. Use it for:
+- Creating the SQLAlchemy engine
+- Initializing connection pools
+- Warming up caches
+
+Do NOT use it for:
+- Running Alembic migrations (run migrations in your CI/CD pipeline, not at startup)
+- Long-running initialization that blocks request handling
+
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Runs once on cold start — keep this fast
+    app.state.db_engine = create_async_engine(settings.database_url, pool_size=1, max_overflow=0)
+    app.state.session_factory = async_sessionmaker(app.state.db_engine, expire_on_commit=False)
+    yield
+    await app.state.db_engine.dispose()
+
+app = FastAPI(lifespan=lifespan)
+```
+
+## Environment Variables & Secrets
+
+- All configuration must come from environment variables — never hardcoded values.
+- On AWS Lambda: use **AWS Secrets Manager** or **Parameter Store** for sensitive values; inject them as environment variables at deploy time.
+- On Cloud Run: use **Secret Manager** secrets mounted as environment variables.
+- Use `pydantic-settings` to validate all env vars at startup so misconfigured deployments fail fast.
+
+```python
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env")  # .env used locally; real env vars override
+
+    database_url: str
+    secret_key: str
+    environment: str = "development"
+
+settings = Settings()
+```
+
+## Observability
+
+- Use **structured logging** (JSON) — CloudWatch, Cloud Logging, and most APM tools parse JSON logs automatically.
+- Add a request ID to every log line using middleware so you can trace a single request across log entries.
+- Use **AWS X-Ray** (Lambda) or **Cloud Trace** (Cloud Run) for distributed tracing.
+- Set up error reporting (Sentry) before going to production.
+
+```python
+# Structured logging middleware example
+import logging, json, uuid
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class RequestLoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        request_id = str(uuid.uuid4())
+        response = await call_next(request)
+        logging.info(json.dumps({
+            "request_id": request_id,
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": response.status_code,
+        }))
+        return response
+```
+
+## Deployment Checklist
+| Item | Why |
+|------|-----|
+| External connection pooler (PgBouncer / RDS Proxy) | Prevents connection exhaustion under load |
+| `pool_size=1, max_overflow=0` on the SQLAlchemy engine | Matches one connection per serverless instance |
+| Secrets in environment variables, not source code | Security |
+| `min-instances: 1` on latency-sensitive services | Prevents cold starts for user-facing routes |
+| Migrations run in CI/CD, not at startup | Startup migration on concurrent cold starts causes race conditions |
+| Structured JSON logging | Parseable by cloud log aggregators |\n\n<!-- b1CodingTool: Module Context [django] - best-practices.md -->\n# Django: Best Practices
 
 ## Models & ORM
 - **Fat models, thin views.** Business logic belongs in model methods, managers, or a dedicated `services.py` — not in views.
@@ -677,4 +3512,365 @@ urlpatterns = [
 | `apps/core/models.py` | `TimeStampedModel`, `UUIDModel` abstract bases — inherit everywhere |
 | `apps/<app>/services.py` | Business logic that doesn't belong on models |
 | `apps/<app>/tests/factories.py` | `factory_boy` factories for test data |
-| `.env` | Local secrets (never commit) |\n\n
+| `.env` | Local secrets (never commit) |\n\n<!-- b1CodingTool: Module Context [django] - dependency-management.md -->\n# Python Dependency Management: uv vs Poetry
+
+## Overview
+
+Two tools dominate modern Python dependency management for Django projects: **uv** and **Poetry**. Both manage virtual environments, dependencies, and lockfiles, but they differ significantly in philosophy, performance, and ecosystem alignment.
+
+## uv
+
+**uv** is a Rust-based Python package manager from Astral (makers of Ruff). It is a drop-in replacement for `pip`, `pip-tools`, `virtualenv`, and optionally `pyenv`.
+
+### What uv Does Well
+- **Speed.** Package resolution and installation are 10–100× faster than pip or Poetry. Large dependency trees (Django + DRF + Celery + Sentry) resolve in under a second.
+- **Standard compliance.** Uses `pyproject.toml` with the PEP 621 `[project]` table — no vendor-specific format. The resulting `pyproject.toml` is readable by any standards-compliant tool.
+- **Python version management.** `uv python install 3.12` replaces pyenv — one tool for both the interpreter and packages.
+- **Lockfile.** `uv.lock` pins exact versions for reproducible installs across environments.
+- **Workspace support.** Manages monorepos with multiple Python packages natively.
+
+### Common uv Commands
+```bash
+uv python install 3.12        # Install Python version
+uv init                       # Create new project with pyproject.toml
+uv add django djangorestframework  # Add dependencies
+uv add --dev pytest pytest-django  # Add dev dependencies
+uv sync                       # Install all deps from lockfile
+uv sync --no-dev              # Install prod deps only (CI/containers)
+uv run python manage.py runserver  # Run command in project venv
+uv run pytest                 # Run tests
+uv lock                       # Update lockfile without installing
+uv pip install <pkg>          # One-off install (pip compatibility mode)
+```
+
+### pyproject.toml with uv
+```toml
+[project]
+name = "my-django-app"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=5.0",
+    "djangorestframework>=3.15",
+    "psycopg[async]>=3.1",
+    "pydantic-settings>=2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-django>=4.8",
+    "factory-boy>=3.3",
+    "ruff>=0.4",
+]
+
+[tool.uv]
+dev-dependencies = []   # legacy field — prefer dependency-groups above
+```
+
+### When to Use uv
+- New projects where you control the toolchain
+- Teams that want a single tool (Python version + packages)
+- CI pipelines where install speed matters
+- Projects already using Ruff (same ecosystem, same philosophy)
+- This project (b1CodingTool) uses `uv` — use it here by default
+
+---
+
+## Poetry
+
+**Poetry** is a Python packaging and dependency management tool that predates uv. It introduced the developer-friendly `pyproject.toml` workflow before PEP 621 was finalized, using its own `[tool.poetry]` section.
+
+### What Poetry Does Well
+- **Mature ecosystem.** Widely adopted — many existing Django projects, tutorials, and CI examples use Poetry.
+- **Publishing.** `poetry publish` builds and uploads packages to PyPI with minimal config — slightly smoother than `uv publish` for library authors.
+- **Explicit dependency groups.** `[tool.poetry.group.dev.dependencies]` has been the standard pattern for years; most Django devs recognize it immediately.
+- **Plugin system.** Community plugins extend Poetry for dynamic versioning, dotenv loading, etc.
+
+### Common Poetry Commands
+```bash
+poetry init                   # Create new pyproject.toml interactively
+poetry add django             # Add dependency
+poetry add --group dev pytest # Add dev dependency
+poetry install                # Install from poetry.lock
+poetry install --only main    # Install prod deps only
+poetry run python manage.py runserver
+poetry run pytest
+poetry update                 # Update all deps within constraints
+poetry lock                   # Update lockfile without installing
+poetry export -f requirements.txt --without-hashes > requirements.txt
+```
+
+### pyproject.toml with Poetry
+```toml
+[tool.poetry]
+name = "my-django-app"
+version = "0.1.0"
+description = ""
+packages = [{include = "app"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "^5.0"
+djangorestframework = "^3.15"
+psycopg = {extras = ["async"], version = "^3.1"}
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+pytest-django = "^4.8"
+factory-boy = "^3.3"
+ruff = "^0.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+```
+
+### When to Use Poetry
+- Existing projects already using Poetry — don't migrate unless there's a reason
+- Teams familiar with Poetry where switching would cause friction
+- Library/package authors who publish to PyPI frequently
+- When a third-party service or tutorial assumes Poetry (some PaaS platforms have Poetry-specific build steps)
+
+---
+
+## Comparison Summary
+
+| | uv | Poetry |
+|---|---|---|
+| **Install speed** | 10–100× faster | Baseline |
+| **Python version mgmt** | Built-in (`uv python`) | Requires pyenv separately |
+| **pyproject.toml format** | PEP 621 standard | `[tool.poetry]` (non-standard) |
+| **Lockfile** | `uv.lock` | `poetry.lock` |
+| **Package publishing** | `uv publish` (basic) | `poetry publish` (polished) |
+| **Maturity** | Newer (stable since 2024) | Mature (since 2018) |
+| **Ecosystem adoption** | Rapidly growing | Widely adopted |
+| **Plugin system** | No | Yes |
+
+## Recommendation
+
+**Use uv for new projects.** It is faster, follows open standards, and handles Python version management in one tool. The ecosystem has converged on it as the modern default.
+
+**Keep Poetry for existing projects** that already use it — migration has no functional benefit and introduces risk.
+
+In either case, **commit the lockfile** (`uv.lock` or `poetry.lock`) to version control. Without it, installs across environments are not reproducible.\n\n<!-- b1CodingTool: Module Context [django] - logging.md -->\n# Django: Logging Best Practices
+
+## Philosophy
+
+Good logs answer two questions without any additional context: **what happened**, and **why it matters**. Every log line should be self-contained enough that a human or AI agent reading it in isolation — with no knowledge of the codebase — can understand the event and act on it.
+
+- **Structured over narrative.** Key-value pairs beat prose. `{"event": "user_login_failed", "email": "a@b.com", "reason": "bad_password", "attempt": 3}` is queryable; `"Login failed for a@b.com"` is not.
+- **Correlation IDs everywhere.** Every request gets a UUID. Every log line for that request carries it. This is the thread that lets you reconstruct a full request trace from fragmented log lines.
+- **Levels mean something.** Don't log everything at INFO. Use levels consistently so alert thresholds are meaningful.
+
+## Log Levels — When to Use Each
+
+| Level | Use for |
+|-------|---------|
+| `DEBUG` | Internal state, SQL queries, variable values during development. Never enabled in production by default. |
+| `INFO` | Normal lifecycle events: request received, user authenticated, background job started/completed. |
+| `WARNING` | Unexpected but recoverable situations: deprecated API used, retry attempt, config fallback triggered. |
+| `ERROR` | A specific operation failed and requires investigation: payment failed, external API returned 5xx, DB write failed. |
+| `CRITICAL` | The application cannot continue operating: DB unreachable, missing required config, unrecoverable startup failure. |
+
+## Setup: structlog + Django logging
+
+Use `structlog` for structured logging. It integrates with Python's standard `logging` module so Django's built-in log calls are also captured.
+
+```bash
+uv add structlog
+```
+
+```python
+# config/settings/base.py
+import structlog
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": structlog.stdlib.ProcessorFormatter,
+            "processor": structlog.processors.JSONRenderer(),
+        },
+        "console": {
+            "()": structlog.stdlib.ProcessorFormatter,
+            "processor": structlog.dev.ConsoleRenderer(),  # human-friendly in dev
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "console" if DEBUG else "json",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {"level": "INFO"},
+        "django.db.backends": {"level": "DEBUG" if DEBUG else "WARNING"},  # SQL in dev only
+    },
+}
+
+structlog.configure(
+    processors=[
+        structlog.contextvars.merge_contextvars,          # injects request-scoped context
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.add_logger_name,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ],
+    wrapper_class=structlog.stdlib.BoundLogger,
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+)
+```
+
+## Correlation IDs via Middleware
+
+Assign a unique `request_id` to every request and bind it into the structlog context so all subsequent log calls automatically include it.
+
+```python
+# apps/core/middleware.py
+import uuid
+import structlog
+from structlog.contextvars import clear_contextvars, bind_contextvars
+
+logger = structlog.get_logger()
+
+class RequestLoggingMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        clear_contextvars()
+        request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+        bind_contextvars(
+            request_id=request_id,
+            method=request.method,
+            path=request.path,
+        )
+
+        logger.info("request_started")
+        response = self.get_response(request)
+
+        bind_contextvars(status_code=response.status_code)
+        logger.info("request_finished")
+        return response
+```
+
+Register in settings:
+```python
+MIDDLEWARE = [
+    "apps.core.middleware.RequestLoggingMiddleware",
+    # ... other middleware
+]
+```
+
+## Logging in Application Code
+
+Get a module-level logger and use bound loggers to attach context:
+
+```python
+import structlog
+
+logger = structlog.get_logger(__name__)
+
+def process_payment(order: Order, payment_method: PaymentMethod) -> PaymentResult:
+    log = logger.bind(order_id=str(order.id), user_id=str(order.user_id), amount=order.total)
+    log.info("payment_initiated")
+
+    try:
+        result = payment_gateway.charge(payment_method, order.total)
+    except PaymentGatewayError as e:
+        log.error("payment_gateway_error", error=str(e), gateway=e.gateway_name)
+        raise
+
+    if not result.success:
+        log.warning("payment_declined", reason=result.decline_reason, code=result.code)
+        return result
+
+    log.info("payment_succeeded", transaction_id=result.transaction_id)
+    return result
+```
+
+## What to Log (and When)
+
+**Request lifecycle:**
+- Request received (method, path, user_id if authenticated)
+- Request completed (status code, duration_ms)
+- Unhandled exceptions (full traceback, request context)
+
+**Business events:**
+- User authentication (success and failure — with failure reason, never the password)
+- State transitions on important models (`order.status` changed from `pending` → `paid`)
+- Background job start, completion, and failure
+
+**External calls:**
+- Every outbound HTTP request (method, URL, status_code, duration_ms)
+- DB query slow log (queries exceeding a threshold — enable `django.db.backends` at DEBUG)
+- Cache hit/miss for expensive operations
+
+**Errors:**
+- Every caught exception that's suppressed — log it at WARNING/ERROR, never silently discard
+- Every `except Exception` block must log the exception
+
+## What NOT to Log
+
+- Passwords, tokens, API keys, secrets — ever
+- Full credit card numbers, SSNs, government IDs
+- Raw request bodies that may contain any of the above
+- PII beyond what's necessary for debugging (email is usually sufficient; full address is not)
+- High-cardinality noise at INFO level (e.g., every cache lookup in a hot path)
+
+## Celery Task Logging
+
+Bind task context at the start of every task:
+
+```python
+import structlog
+from celery import shared_task
+
+logger = structlog.get_logger(__name__)
+
+@shared_task(bind=True)
+def send_welcome_email(self, user_id: int) -> None:
+    log = logger.bind(task_id=self.request.id, task="send_welcome_email", user_id=user_id)
+    log.info("task_started")
+    try:
+        user = User.objects.get(pk=user_id)
+        email_service.send_welcome(user)
+        log.info("task_succeeded")
+    except User.DoesNotExist:
+        log.error("task_failed", reason="user_not_found")
+        raise
+    except Exception as e:
+        log.error("task_failed", reason=str(e), exc_info=True)
+        raise self.retry(exc=e, countdown=60)
+```
+
+## Useful Log Schema for AI Debugging
+
+Every log line should ideally contain:
+
+```json
+{
+  "timestamp": "2026-04-06T14:32:01.123Z",
+  "level": "error",
+  "logger": "apps.payments.service",
+  "event": "payment_gateway_error",
+  "request_id": "a1b2c3d4-...",
+  "user_id": "42",
+  "order_id": "ord_789",
+  "amount": 59.99,
+  "gateway": "stripe",
+  "error": "connection timeout after 5000ms",
+  "exc_info": "Traceback (most recent call last): ..."
+}
+```
+
+A log stream with this shape can be filtered, grouped, and summarized by an AI agent with a single query: *"show me all payment_gateway_error events in the last hour, grouped by gateway and error type."*\n\n
