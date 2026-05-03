@@ -75,9 +75,11 @@ def test_fetch_git_url_pulls_when_cache_exists(tmp_path):
     assert first_call_args[3] == "pull"
 
 
+from b1.core.exceptions import NetworkError
+
 def test_fetch_git_url_raises_on_clone_failure(tmp_path):
     fetcher = _fetcher(tmp_path)
     with patch("subprocess.run") as mock_run:
         mock_run.side_effect = subprocess.CalledProcessError(1, "git", stderr=b"auth failed")
-        with pytest.raises(subprocess.CalledProcessError):
+        with pytest.raises(NetworkError):
             fetcher.fetch("https://github.com/org/my-module.git")

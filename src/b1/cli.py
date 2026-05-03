@@ -1,5 +1,6 @@
 import typer
 from rich.console import Console
+from b1.core.exceptions import B1Error
 
 from b1.commands.init import init_cmd
 from b1.commands.install import install_cmd
@@ -28,4 +29,15 @@ app.command(name="link-to-clickup-list")(link_clickup_cmd)
 app.command(name="link-to-github-repo")(link_github_cmd)
 
 def main():
-    app()
+    try:
+        app()
+    except B1Error as e:
+        console.print(f"\n[bold red]Error:[/bold red] {e.message}")
+        if e.suggestions:
+            console.print("\n[bold yellow]Suggestions:[/bold yellow]")
+            for suggestion in e.suggestions:
+                console.print(f"  - {suggestion}")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"\n[bold red]Unexpected Error:[/bold red] {e}")
+        raise typer.Exit(1)

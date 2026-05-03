@@ -85,9 +85,13 @@ class ModuleInstaller:
                     shell=True, 
                     text=True, 
                     capture_output=True,
-                    check=True
+                    check=True,
+                    timeout=300 # 5 minute timeout
                 )
                 progress.update(task, description=f"[green]✔[/green] Setup complete for [cyan]{name}[/cyan]")
+            except subprocess.TimeoutExpired:
+                progress.update(task, description=f"[red]✖[/red] Timed out during setup for [cyan]{name}[/cyan]")
+                console.print(f"[red]Error:[/red] Command timed out after 300s: {command}")
             except subprocess.CalledProcessError as e:
                 progress.update(task, description=f"[red]✖[/red] Failed setup for [cyan]{name}[/cyan]")
                 console.print(f"[red]Error Output:[/red]\n{e.stderr}")
@@ -115,11 +119,15 @@ class ModuleInstaller:
                         shell=False, 
                         text=True, 
                         capture_output=True,
-                        check=True
+                        check=True,
+                        timeout=300 # 5 minute timeout
                     )
                     progress.update(task, description=f"[green]✔[/green] {name} hook completed")
                 else:
                     progress.update(task, description=f"[yellow]⚠[/yellow] {name} hook script not found: {command}")
+            except subprocess.TimeoutExpired:
+                progress.update(task, description=f"[red]✖[/red] {name} hook timed out")
+                console.print(f"[red]Error:[/red] Hook timed out after 300s: {command}")
             except subprocess.CalledProcessError as e:
                 progress.update(task, description=f"[red]✖[/red] {name} hook failed")
                 if e.stdout:

@@ -4,6 +4,7 @@ from rich.console import Console
 
 from b1.core.fetcher import ModuleFetcher
 from b1.core.installer import ModuleInstaller
+from b1.core.exceptions import ProjectError, B1Error
 
 console = Console()
 
@@ -16,15 +17,13 @@ def install_cmd(
     """
     project_dir = Path.cwd()
     if not (project_dir / ".agent").exists():
-        console.print("[bold red]Error:[/bold red] Not a b1CodingTool project. Please run `b1 init` first.")
-        raise typer.Exit(1)
+        raise ProjectError(
+            "Not a b1CodingTool project.",
+            suggestions=["Run `b1 init` to bootstrap the project structure.", "Ensure you are in the project root directory."]
+        )
         
     fetcher = ModuleFetcher()
     installer = ModuleInstaller(target_project_dir=project_dir)
     
-    try:
-        module_path = fetcher.fetch(source)
-        installer.install(module_path, link=link)
-    except Exception as e:
-        console.print(f"[bold red]Installation Error:[/bold red] {e}")
-        raise typer.Exit(1)
+    module_path = fetcher.fetch(source)
+    installer.install(module_path, link=link)

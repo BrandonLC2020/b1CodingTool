@@ -58,10 +58,12 @@ def test_from_yaml_raises_file_not_found_for_missing_file(tmp_path):
         ModuleConfig.from_yaml(tmp_path / "nonexistent.yaml")
 
 
+from b1.core.exceptions import ValidationError
+
 def test_from_yaml_raises_value_error_for_empty_file(tmp_path):
     yaml_path = tmp_path / "b1-module.yaml"
     yaml_path.write_text("", encoding="utf-8")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         ModuleConfig.from_yaml(yaml_path)
 
 

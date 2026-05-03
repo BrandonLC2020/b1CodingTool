@@ -1,13 +1,16 @@
 import subprocess
+import os
 from pathlib import Path
 from rich.console import Console
+from b1.core.exceptions import NetworkError
 
 console = Console()
 
 class ModuleFetcher:
-    def __init__(self):
+    def __init__(self, timeout: int = 60):
         self.cache_dir = Path.home() / ".b1" / "cache"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.timeout = timeout
         
     def fetch(self, source: str) -> Path:
         """
@@ -28,20 +31,68 @@ class ModuleFetcher:
             if target_path.exists():
                 console.print(f"[dim]Module {module_name} already in cache. Pulling latest...[/dim]")
                 try:
-                    subprocess.run(["git", "-C", str(target_path), "pull"], check=True, capture_output=True)
+                    subprocess.run(
+                        ["git", "-C", str(target_path), "pull"], 
+                        check=True, 
+                        capture_output=True,
+                        timeout=self.timeout
+                    )
+                except subprocess.TimeoutExpired:
+                    raise NetworkError(
+                        f"Connection timed out while pulling {source}",
+                        suggestions=[
+                            "Check your internet connection.",
+                            "The git server might be slow or unresponsive.",
+                            f"Try increasing the timeout (current: {self.timeout}s)."
+                        ]
+                    )
                 except subprocess.CalledProcessError as e:
-                    console.print(f"[bold red]Failed to pull latest from {source}[/bold red]")
-                    console.print(e.stderr.decode('utf-8'))
-                    raise
+                    stderr = e.stderr.decode('utf-8')
+                    suggestions = [
+                        "Verify you have access to the repository.",
+                        "Check if the repository URL is correct."
+                    ]
+                    if "SSL" in stderr or "certificate" in stderr:
+                        suggestions.append("Check your SSL certificate configuration.")
+                        suggestions.append("Try setting GIT_SSL_NO_VERIFY=true if you are behind a corporate proxy (use with caution).")
+                    
+                    raise NetworkError(
+                        f"Failed to pull latest from {source}\nError: {stderr.strip()}",
+                        suggestions=suggestions
+                    )
                 return target_path
             
             console.print(f"[blue]Cloning module from {source}...[/blue]")
             try:
-                subprocess.run(["git", "clone", source, str(target_path)], check=True, capture_output=True)
+                subprocess.run(
+                    ["git", "clone", source, str(target_path)], 
+                    check=True, 
+                    capture_output=True,
+                    timeout=self.timeout
+                )
+            except subprocess.TimeoutExpired:
+                raise NetworkError(
+                    f"Connection timed out while cloning {source}",
+                    suggestions=[
+                        "Check your internet connection.",
+                        "Verify the repository URL exists.",
+                        f"Try increasing the timeout (current: {self.timeout}s)."
+                    ]
+                )
             except subprocess.CalledProcessError as e:
-                console.print(f"[bold red]Failed to clone {source}[/bold red]")
-                console.print(e.stderr.decode('utf-8'))
-                raise
+                stderr = e.stderr.decode('utf-8')
+                suggestions = [
+                    "Verify you have access to the repository.",
+                    "Check if the repository URL is correct."
+                ]
+                if "SSL" in stderr or "certificate" in stderr:
+                    suggestions.append("Check your SSL certificate configuration.")
+                    suggestions.append("Try setting GIT_SSL_NO_VERIFY=true if you are behind a corporate proxy (use with caution).")
+                
+                raise NetworkError(
+                    f"Failed to clone {source}\nError: {stderr.strip()}",
+                    suggestions=suggestions
+                )
                 
             return target_path
             
