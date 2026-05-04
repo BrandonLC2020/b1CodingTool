@@ -63,68 +63,88 @@ It contains app logic, directory structures, and active tasks.
 - `ContextCompiler` assembles content in order: root `agent.md` → `.agent/project/agent.md` → each installed module's `context/*.md` files.
 
 ## Architecture Notes
-- Follow the guidelines specified in the root `agent.md`.\n\n<!-- b1CodingTool: Module Context [django-ninja] - best-practices.md -->\n# Django Ninja: Best Practices
+- Follow the guidelines specified in the root `agent.md`.\n\n<!-- b1CodingTool: Module Context [version-control] - best-practices.md -->\n# Version Control: Best Practices
 
-## API Design
-- **Routers over Global API:** Use `NinjaRouter` for feature-specific endpoints and mount them to a main `NinjaAPI` instance in `config/urls.py` or a central `api.py`.
-- **Pydantic Schemas:** Always use Pydantic schemas for request and response validation. Avoid using raw dictionaries.
-- **Type Safety:** Leverage Python type hints for all endpoint parameters to ensure automatic validation and OpenAPI documentation generation.
-- **Error Handling:** Use Django Ninja's built-in exception handlers for common errors (e.g., 404, validation errors).
+## Secret Protection (Critical)
+- **Never Commit Secrets:** Do not commit API keys, passwords, private keys, or credentials to version control.
+- **Use .env Files:** Store local secrets in `.env` files and ensure `.env` is listed in `.gitignore`.
+- **Environment Variables:** Use system environment variables or secure vault services (e.g., GitHub Secrets, AWS Secrets Manager) for production credentials.
+- **Git Hooks:** Use pre-commit hooks (e.g., `gitleaks`, `trufflehog`) to scan for secrets before they are committed.
+- **History Cleanup:** If a secret is committed by mistake, use `git-filter-repo` or BFG Repo-Cleaner to purge it from the entire history. Revoke the secret immediately.
 
-## Asynchronous Support
-- **Async Endpoints:** Use `async def` for endpoints that perform I/O-bound tasks (e.g., network calls) to improve concurrency.
-- **Database Access:** When using async endpoints, use `sync_to_async` for Django ORM calls or use an async-compatible database driver.
+## Repository Hygiene
+- **Atomic Commits:** Make small, focused commits that do one thing well. Avoid "giant" commits.
+- **Descriptive Messages:** Follow the Conventional Commits specification (`feat:`, `fix:`, `chore:`, etc.).
+- **Ignore files:** Maintain a robust `.gitignore` and agent-specific ignore files (`.geminiignore`, `.claudeignore`) to keep the repository clean.
+- **Large Files:** Use Git LFS (Large File Storage) for binary assets or large data files.
 
-## Authentication
-- **Security Classes:** Use `HttpBearer`, `APIKeyHeader`, or `HttpBasicAuth` for standard authentication patterns.
-- **Scoped Auth:** Apply authentication to specific routers or endpoints rather than globally if possible.
+## Branch Management
+- **Main/Master Branch:** The `main` branch should always be deployable and protected.
+- **Feature Branching:** Create short-lived feature branches (`feat/name`) for all new work.
+- **Pull Requests:** Use PRs for code review and automated testing before merging into the main branch.\n\n<!-- b1CodingTool: Module Context [version-control] - conventions.md -->\n# Version Control: Conventions
+
+## Commit Casing
+Follow Conventional Commits:
+| Type | Use Case |
+|------|----------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `docs` | Documentation updates |
+| `style` | Formatting, missing semi-colons, etc. |
+| `refactor` | Code restructuring without behavior change |
+| `test` | Adding or updating tests |
+| `chore` | Build tasks, package updates |
+
+## Commit Message Format
+`<type>(<scope>): <description>`
+Example: `feat(auth): add OAuth2 login flow`
+
+## Ignoring Files
+Required entries in every `.gitignore`:
+```
+# Secrets
+.env
+*.pem
+*.key
+
+# Local config
+.agent/config.yaml (if local-only)
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+```\n\n<!-- b1CodingTool: Module Context [github-actions] - best-practices.md -->\n# GitHub Actions: Best Practices
+
+## Workflow Design
+- **Single Responsibility:** Each workflow file (`.github/workflows/*.yml`) should focus on a specific task (e.g., `test.yml`, `deploy.yml`).
+- **Reuse Actions:** Use official or verified actions from the GitHub Marketplace. Prefer internal reusable workflows for organization-wide standards.
+- **Fail Fast:** Place fast-running tasks (linting, unit tests) early in the pipeline to provide quick feedback.
+
+## Security
+- **Least Privilege:** Use the `permissions` key in workflow files to grant only the minimum necessary tokens (e.g., `contents: read`, `deployments: write`).
+- **Secret Usage:** Use `${{ secrets.SECRET_NAME }}` for all credentials. Never echo secrets into logs.
+- **Pin Actions:** Pin actions to a specific commit SHA rather than a version tag (e.g., `v1`) to prevent supply-chain attacks.
+- **Environment Protection:** Use GitHub Environments with required reviewers for production deployments.
 
 ## Performance
-- **Select/Prefetch Related:** Always use `select_related` and `prefetch_related` in ORM queries to avoid N+1 issues in API responses.
-- **Pagination:** Use Django Ninja's pagination support for endpoints that return lists of objects.\n\n<!-- b1CodingTool: Module Context [django-ninja] - conventions.md -->\n# Django Ninja: Coding Conventions
+- **Caching:** Use `actions/cache` to speed up dependency installation for npm, pip, etc.
+- **Job Concurrency:** Use `concurrency` groups to cancel in-progress runs when a new commit is pushed to the same branch.
+- **Matrix Builds:** Use `strategy/matrix` to test across multiple versions of languages or OSs efficiently.\n\n<!-- b1CodingTool: Module Context [github-actions] - conventions.md -->\n# GitHub Actions: Conventions
 
-## Naming
-| Entity | Convention | Example |
-|--------|-----------|---------|
-| API Instance | `PascalCase` or `api` | `api = NinjaAPI()`, `UserAPI` |
-| Routers | `camelCase` or `snake_case` | `userRouter`, `orders_router` |
-| Schemas (Input) | `<Model>In` | `UserIn`, `OrderIn` |
-| Schemas (Output) | `<Model>Out` | `UserOut`, `OrderOut` |
-| Endpoints | `snake_case` | `get_user`, `create_order` |
+## File Naming
+- Workflows live in `.github/workflows/`.
+- Use `kebab-case.yml` for filenames (e.g., `ci-pipeline.yml`, `auto-tag.yml`).
 
-## File Organization
-- **api.py:** Place feature-specific routers in an `api.py` file within each Django app.
-- **schemas.py:** Define Pydantic schemas in a `schemas.py` file within each Django app.
-- **urls.py:** Mount all app-specific routers in the project's root `urls.py`.
+## Job Naming
+- Use clear, descriptive names for jobs and steps (e.g., `Job: Run Unit Tests`, `Step: Install dependencies`).
 
-## Documentation
-- **OpenAPI:** Provide `summary`, `description`, and `tags` for all endpoints to ensure high-quality documentation.
-- **Examples:** Use Pydantic's `Field(examples=[...])` to provide realistic examples for schema fields.\n\n<!-- b1CodingTool: Module Context [django-ninja] - directory-structure.md -->\n# Django Ninja: Directory Structure
-
-## Standard App Layout
+## Directory Structure
 ```
-apps/
-└── users/
-    ├── api.py             # NinjaRouters for this app
-    ├── schemas.py         # Pydantic models for this app
-    ├── models.py          # Django ORM models
-    ├── services.py        # Business logic (used by api.py)
-    └── ...
-```
-
-## Central API Mount
-```
-config/
-├── urls.py                # Mount NinjaAPI here
-└── api.py                 # Central NinjaAPI instance + router registration
-```\n\n<!-- b1CodingTool: Module Context [django-ninja] - dependency-management.md -->\n# Django Ninja: Dependency Management
-
-## Installation
-```bash
-uv add django-ninja
-```
-
-## Related Dependencies
-- **Pydantic:** Core validation (usually installed with django-ninja).
-- **Aiohttp:** For making async HTTP calls in endpoints.
-- **Djangorestframework:** (Optional) If transitioning from DRF or using DRF-specific features.\n\n
+.github/
+├── workflows/
+│   ├── main.yml        # Primary CI pipeline
+│   └── release.yml     # Production deployment
+├── actions/            # Custom local actions
+└── scripts/            # Helper scripts for workflows
+```\n\n

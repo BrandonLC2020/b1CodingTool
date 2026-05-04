@@ -1,0 +1,11 @@
+name: version-control
+version: 1.0.0
+type: cross_cutting
+description: "Universal standards for Git hygiene, branch management, and rigorous secret protection."
+skills:
+  - name: "Secret Scan Auditor"
+    description: "Assists in identifying potential hardcoded secrets or sensitive files that should be ignored."
+  - name: "Git Hygiene Assistant"
+    description: "Helps restructure commits or clean up large/irrelevant files from the history."
+hooks:
+  post-install: "scripts/post-install.sh"

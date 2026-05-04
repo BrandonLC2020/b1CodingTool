@@ -1,0 +1,11 @@
+name: github-actions
+version: 1.0.0
+type: deployment
+description: "GitHub Actions standards, CI/CD pipeline best practices, and reusable workflow templates."
+skills:
+  - name: "Workflow Generator"
+    description: "Generates GitHub Action YAML files for common tasks like testing, linting, and deployment."
+  - name: "Action Security Auditor"
+    description: "Checks workflow files for security risks like unpinned actions or insecure secret usage."
+hooks:
+  post-install: "scripts/post-install.sh"
