@@ -1,0 +1,11 @@
+name: django-ninja
+version: 1.0.0
+type: development
+description: "Django Ninja standards, Pydantic-based API best practices, and asynchronous endpoint guidelines."
+skills:
+  - name: "Django Ninja Schema Generator"
+    description: "Assists in creating Pydantic schemas for Django Ninja endpoints."
+  - name: "Ninja API Scout"
+    description: "Helps identify and configure Django Ninja API routers and authentication."
+hooks:
+  post-install: "scripts/post-install.sh"
