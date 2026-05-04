@@ -63,60 +63,230 @@ It contains app logic, directory structures, and active tasks.
 - `ContextCompiler` assembles content in order: root `agent.md` → `.agent/project/agent.md` → each installed module's `context/*.md` files.
 
 ## Architecture Notes
-- Follow the guidelines specified in the root `agent.md`.\n\n<!-- b1CodingTool: Module Context [swiftui] - best-practices.md -->\n# SwiftUI: Best Practices
+- Follow the guidelines specified in the root `agent.md`.\n\n<!-- b1CodingTool: Module Context [python] - best-practices.md -->\n# Python: Best Practices
 
-## View Composition
-- **Small is Beautiful:** Extract subviews liberally. If a `body` property exceeds 30-40 lines, it's a candidate for extraction into a separate `struct`.
-- **View Hierarchy:** Prefer `Group` or `@ViewBuilder` for logic-heavy views to avoid deep nesting of `if/else` inside containers.
-- **Computed Properties:** Use private computed properties for simple sub-elements that don't need their own state.
+## Code Quality
+- **Type Hinting:** Use PEP 484 type hints for all function signatures and complex variables. Use `from __future__ import annotations` to support forward references.
+- **KISS & DRY:** Prioritize readability. Pythonic code (idiomatic) is preferred over complex abstractions.
+- **Docstrings:** Use Google-style or NumPy-style docstrings for all public modules, classes, and functions.
 
-## State Management (Modern)
-- **Local State:** Use `@State` for private, simple data owned by the view.
-- **Shared State:** Use the `@Observable` macro (Swift 5.9+) for complex models. Avoid `ObservableObject` and `@Published` in new code.
-- **Data Flow:** Pass data down via initializers; use `@Environment` for cross-cutting concerns (e.g., theme, user session).
-- **Binding:** Use `@Binding` to create a two-way connection to state owned by a parent view.
+## Error Handling
+- **Specific Exceptions:** Catch specific exceptions rather than using a blanket `except Exception:`.
+- **EAFP (Easier to Ask for Forgiveness than Permission):** Prefer `try-except` blocks over pre-emptive checks where appropriate.
+- **Custom Exceptions:** Create domain-specific exception classes for complex logic.
+
+## Concurrency
+- **Async/Await:** Use `asyncio` for I/O-bound tasks.
+- **Subprocessing:** Use the `subprocess` module for running external commands, ensuring proper timeout and error handling.
+- **Threading/Multiprocessing:** Use `threading` for I/O and `multiprocessing` for CPU-bound tasks, adhering to the Global Interpreter Lock (GIL) constraints.
 
 ## Performance
-- **Identify Stability:** Ensure your data models are stable to prevent unnecessary view body evaluations.
-- **Previews:** Always include `Preview` providers. Use mock data to test various states (loading, error, empty).
-- **Heavy Work:** Never perform network calls or heavy computation directly in a view initializer or `body`. Use `.task` or `.onAppear`.
+- **Built-in Functions:** Prefer built-in functions and standard library modules (e.g., `itertools`, `collections`) as they are highly optimized.
+- **Profiling:** Use `cProfile` or `timeit` to identify bottlenecks before optimizing.\n\n<!-- b1CodingTool: Module Context [python] - conventions.md -->\n# Python: Coding Conventions
 
-## Layout
-- **Containers:** Use `VStack`, `HStack`, and `ZStack` as primary building blocks.
-- **Adaptive Layout:** Use `Spacer`, `layoutPriority()`, and `GeometryReader` (sparingly) to create responsive UIs.
-- **Safe Areas:** Respect safe areas unless a background element explicitly needs to ignore them.\n\n<!-- b1CodingTool: Module Context [swiftui] - conventions.md -->\n# SwiftUI: Conventions
+## Style Guide
+- **PEP 8:** Adhere strictly to PEP 8 standards. Use **Ruff** for linting and formatting.
+- **Indentation:** Use 4 spaces per indentation level.
+- **Line Length:** Limit lines to 88 or 100 characters (matching Black/Ruff defaults).
 
 ## Naming
-- **Views:** Use `PascalCase` with a `View` suffix (e.g., `HomeView`, `UserCellView`).
-- **View Modifiers:** Use `camelCase` and keep them descriptive (e.g., `primaryButtonStyle()`).
-- **State Variables:** Use `camelCase` (e.g., `isLoading`, `userInput`).
+| Entity | Convention | Example |
+|--------|-----------|---------|
+| Modules / Packages | `snake_case` | `my_package`, `utils.py` |
+| Classes | `PascalCase` | `UserService`, `APIClient` |
+| Functions / Methods | `snake_case` | `get_user_id()`, `save_record()` |
+| Variables | `snake_case` | `user_count`, `is_active` |
+| Constants | `SCREAMING_SNAKE_CASE` | `MAX_RETRIES`, `DEFAULT_TIMEOUT` |
 
-## File Organization
-- **One View per File:** Each non-trivial SwiftUI view should reside in its own file named after the view.
-- **Preview Support:** Keep `Previews` at the bottom of the same file as the view.
-- **Extensions:** Place view-specific modifiers in an `Extension` block at the end of the file or in a dedicated `ViewModifiers.swift` file.
+## Imports
+- Order imports using Ruff/isort:
+  1. Standard library
+  2. Third-party packages
+  3. Local app/module imports
+- Use absolute imports over relative imports where possible.\n\n<!-- b1CodingTool: Module Context [python] - directory-structure.md -->\n# Python: Directory Structure
 
-## Code Style
-- **Modifier Order:** Order modifiers consistently:
-    1. Layout (e.g., `frame`, `padding`)
-    2. Styling (e.g., `background`, `clipShape`)
-    3. Interactions (e.g., `onTapGesture`)
-    4. Accessibility (e.g., `accessibilityLabel`)
-- **Trailing Closures:** Always use trailing closure syntax for `VStack`, `HStack`, etc.
-- **Explicit Types:** Only provide explicit types for properties when Swift's inference is ambiguous or for public APIs.\n\n<!-- b1CodingTool: Module Context [swiftui] - directory-structure.md -->\n# SwiftUI: Directory Structure
-
-## Standard App Layout
+## Standard Package Layout
 ```
-Sources/
-├── [AppName]App.swift      # Application entry point
-├── Views/                  # Reusable UI components
-│   ├── Common/             # Buttons, Text fields, etc.
-│   └── Features/           # Feature-specific views
-├── Models/                 # @Observable data models
-├── ViewModels/             # (Optional) if using MVVM
-└── Resources/              # Assets, Colors, Fonts
+project_root/
+├── pyproject.toml         # Build system and dependency config
+├── README.md
+├── src/                   # Source code
+│   └── package_name/      # Main package
+│       ├── __init__.py
+│       ├── main.py        # Entry point
+│       └── utils.py
+├── tests/                 # Test suites (pytest)
+│   ├── conftest.py
+│   └── unit/
+└── docs/                  # Project documentation
 ```
 
-## Modular Structure
-- **Domain-Specific Views:** Keep views co-located with the features they support.
-- **Preview Assets:** Use `Preview Content` folder for mock JSON or images that should only be included in development builds.\n\n
+## Scoped Modules
+- For larger projects, use a `features/` or `core/` subdirectory to organize logic by domain rather than layer.\n\n<!-- b1CodingTool: Module Context [python] - dependency-management.md -->\n# Python: Dependency Management with uv
+
+## Overview
+**uv** is the recommended package manager for all Python projects. it is extremely fast and manages both Python versions and dependencies using `pyproject.toml` and `uv.lock`.
+
+## Common Commands
+```bash
+uv init                    # Initialize a new project
+uv add <package>           # Add a production dependency
+uv add --dev <package>     # Add a development dependency
+uv sync                    # Sync environment with lockfile
+uv run <command>           # Run a command in the project venv
+uv python install 3.12     # Install a specific Python version
+```
+
+## pyproject.toml
+Always use the standard PEP 621 `[project]` table in `pyproject.toml`.\n\n<!-- b1CodingTool: Module Context [typescript] - best-practices.md -->\n# TypeScript: Best Practices
+
+## Type Safety
+- **Strict Mode:** Always enable `strict: true` in `tsconfig.json`.
+- **Avoid `any`:** Use `unknown` or specific interfaces instead of `any`. If a value is genuinely dynamic, use type guards or Zod for validation.
+- **Interfaces vs. Types:** Prefer `interface` for public APIs and object structures (as they support extension/merging) and `type` for unions, intersections, and primitives.
+- **Utility Types:** Leverage built-in utility types (e.g., `Partial`, `Pick`, `Omit`, `Readonly`) to maintain type flexibility.
+
+## Code Quality
+- **Explicit Returns:** Annotate return types for all public-facing functions and complex logic.
+- **Immutability:** Use `readonly` for array and object properties that should not be modified.
+- **Enums:** Prefer `const enum` or string unions over standard `enum` to minimize runtime overhead.
+
+## Error Handling
+- **Type Guards:** Use `is` predicates to safely narrow types in catch blocks.
+- **Custom Errors:** Extend the base `Error` class for domain-specific exceptions.
+- **Result Pattern:** For critical operations, consider returning a Result object (e.g., `{ success: true, data: T } | { success: false, error: Error }`).
+
+## Performance
+- **Tree Shaking:** Use ESM (`import`/`export`) to allow bundlers to remove unused code.
+- **Type-only Imports:** Use `import type { ... }` for types to ensure they are fully stripped during compilation.\n\n<!-- b1CodingTool: Module Context [typescript] - conventions.md -->\n# TypeScript: Coding Conventions
+
+## Style Guide
+- **Consistency:** Use **ESLint** and **Prettier**. Follow the airbnb or standard-ts guidelines.
+- **Indentation:** Use 2 spaces for web projects, 2 or 4 for Node.js projects (be consistent).
+- **Line Length:** Typically 80 or 100 characters.
+
+## Naming
+| Entity | Convention | Example |
+|--------|-----------|---------|
+| Files | `PascalCase.ts` (classes), `camelCase.ts` (utils/hooks) | `UserService.ts`, `useAuth.ts` |
+| Interfaces / Types | `PascalCase` | `UserRecord`, `AuthResponse` |
+| Classes | `PascalCase` | `APIClient`, `Validator` |
+| Functions / Methods | `camelCase` | `fetchData()`, `validateInput()` |
+| Variables | `camelCase` | `userCount`, `isActive` |
+| Constants | `SCREAMING_SNAKE_CASE` | `MAX_RETRIES`, `BASE_URL` |
+
+## Documentation
+- **TSDoc:** Use JSDoc-style comments with TSDoc tags (e.g., `@param`, `@returns`, `@throws`) for all public APIs.\n\n<!-- b1CodingTool: Module Context [typescript] - directory-structure.md -->\n# TypeScript: Directory Structure
+
+## Standard Node.js Structure
+```
+project_root/
+├── tsconfig.json          # TypeScript configuration
+├── package.json
+├── src/                   # Source code
+│   ├── index.ts           # Entry point
+│   ├── core/              # Shared logic
+│   ├── features/          # Feature-based organization
+│   └── types/             # Shared interfaces/types
+├── tests/                 # Vitest or Jest suites
+│   ├── unit/
+│   └── integration/
+└── dist/                  # Compiled JS output (ignored)
+```
+
+## Barrel Exports
+Use `index.ts` files to define the public API of a directory and simplify imports.\n\n<!-- b1CodingTool: Module Context [typescript] - dependency-management.md -->\n# TypeScript: Dependency Management
+
+## Package Managers
+- **pnpm (Recommended):** Fast, disk-efficient, and great for monorepos.
+- **npm:** Universal compatibility.
+- **Yarn:** Mature ecosystem.
+
+## Common Commands (pnpm)
+```bash
+pnpm init                  # Initialize project
+pnpm add <package>         # Add runtime dependency
+pnpm add -D <package>      # Add dev dependency (including @types)
+pnpm install               # Install from lockfile
+pnpm run <script>          # Run a package.json script
+```
+
+## Type Definitions
+Always install `@types/<package>` for libraries that do not ship with built-in type definitions.\n\n<!-- b1CodingTool: Module Context [java] - best-practices.md -->\n# Java: Best Practices
+
+## Design Patterns
+- **SOLID Principles:** Adhere strictly to SOLID principles.
+- **Composition over Inheritance:** Prefer composition to build flexible systems.
+- **Factory & Singleton:** Use design patterns like Factory, Singleton, and Builder where appropriate.
+
+## Code Quality
+- **Type Safety:** Leverage Java's strong typing. Avoid using `Object` or raw types.
+- **Immutability:** Use `final` for variables and parameters that do not change. Prefer immutable collections.
+- **Java Streams:** Use Stream API for cleaner, declarative collection processing.
+
+## Error Handling
+- **Specific Exceptions:** Throw and catch specific exceptions. Avoid `catch (Exception e)`.
+- **Checked vs. Unchecked:** Use checked exceptions for recoverable errors and unchecked for programming errors.
+- **Optional:** Use `Optional<T>` to avoid `null` returns and `NullPointerException`.
+
+## Performance
+- **JVM Optimization:** Be aware of GC (Garbage Collection) behavior. Avoid creating unnecessary objects in hot loops.
+- **String Building:** Use `StringBuilder` for string concatenation in loops.
+- **Concurrency:** Use `java.util.concurrent` (Executors, CompletableFuture, Virtual Threads in Java 21+) for multi-threaded tasks.\n\n<!-- b1CodingTool: Module Context [java] - conventions.md -->\n# Java: Coding Conventions
+
+## Style Guide
+- **Google Java Style:** Standardize on Google Java Style or Oracle conventions.
+- **Indentation:** Use 4 spaces.
+- **Line Length:** Typically 100 or 120 characters.
+
+## Naming
+| Entity | Convention | Example |
+|--------|-----------|---------|
+| Packages | `lowercase.dot.separated` | `com.b1coding.service` |
+| Classes / Interfaces | `PascalCase` | `UserService`, `DataRepository` |
+| Methods | `camelCase` | `fetchUserById()`, `saveRecord()` |
+| Variables | `camelCase` | `userCount`, `isActive` |
+| Constants | `SCREAMING_SNAKE_CASE` | `MAX_RETRIES`, `DEFAULT_TIMEOUT` |
+
+## Documentation
+- **Javadoc:** Use Javadoc for all public APIs, including classes, methods, and constructors.\n\n<!-- b1CodingTool: Module Context [java] - directory-structure.md -->\n# Java: Directory Structure
+
+## Standard Maven Layout
+```
+project_root/
+├── pom.xml                # Maven configuration
+├── src/
+│   ├── main/
+│   │   ├── java/          # Source code (package-structured)
+│   │   └── resources/     # Config, static assets
+│   └── test/
+│       ├── java/          # Test suites (JUnit/TestNG)
+│       └── resources/
+└── target/                # Build artifacts (ignored)
+```
+
+## Standard Gradle Layout
+```
+project_root/
+├── build.gradle           # Gradle configuration
+├── src/                   # (Same layout as Maven)
+└── build/                 # Build artifacts (ignored)
+```\n\n<!-- b1CodingTool: Module Context [java] - dependency-management.md -->\n# Java: Dependency Management
+
+## Build Tools
+- **Maven:** XML-based, industry standard.
+- **Gradle (Recommended):** Groovy/Kotlin-based, flexible and fast.
+
+## Common Commands (Maven)
+```bash
+mvn clean install          # Build and install to local repo
+mvn test                   # Run tests
+mvn spring-boot:run        # Run Spring Boot app
+```
+
+## Common Commands (Gradle)
+```bash
+./gradlew build            # Build the project
+./gradlew test             # Run tests
+./gradlew bootRun          # Run Spring Boot app
+```\n\n

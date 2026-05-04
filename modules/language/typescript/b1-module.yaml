@@ -1,0 +1,11 @@
+name: typescript
+version: 1.0.0
+type: development
+description: "TypeScript language standards, type safety best practices, and modern Node.js/Web development guidelines."
+skills:
+  - name: "TS Interface Generator"
+    description: "Generates TypeScript interfaces from JSON payloads or existing JS objects."
+  - name: "Type Safety Auditor"
+    description: "Identifies and helps refactor 'any' types and loose casting."
+hooks:
+  post-install: "scripts/post-install.sh"

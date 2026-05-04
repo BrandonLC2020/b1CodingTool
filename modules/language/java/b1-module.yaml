@@ -1,0 +1,11 @@
+name: java
+version: 1.0.0
+type: development
+description: "Core Java language standards, Maven/Gradle project structures, and enterprise design patterns."
+skills:
+  - name: "Java JUnit Generator"
+    description: "Automated JUnit 5 test suite generation for Java classes."
+  - name: "Spring Boot Scout"
+    description: "Helps identify and configure Spring components and dependencies."
+hooks:
+  post-install: "scripts/post-install.sh"

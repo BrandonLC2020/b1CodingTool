@@ -1,0 +1,11 @@
+name: python
+version: 1.0.0
+type: development
+description: "Core Python language standards, modular architecture, and modern dependency management with uv."
+skills:
+  - name: "Python Test Generator"
+    description: "Automated pytest suite generation for Python modules."
+  - name: "Type Hinting Assistant"
+    description: "Assists in adding comprehensive PEP 484 type hints to existing code."
+hooks:
+  post-install: "scripts/post-install.sh"
