@@ -757,54 +757,7 @@ In development, logs appear in the Expo terminal and in Flipper (if installed). 
 npx expo install react-native-logs
 ```
 
-This gives you filterable, colored log output during development with no production overhead.\n\n<!-- b1CodingTool: Module Context [general] - best-practices.md -->\n# General: Best Practices
-
-## Project Management
-- **Modular Growth:** Build features in small, independent modules. Avoid monolithic structures.
-- **Documentation First:** Document architectural decisions and API designs before implementation.
-- **Continuous Validation:** Run tests and linters frequently during development, not just before a commit.
-
-## Code Quality
-- **KISS (Keep It Simple, Stupid):** Prioritize readability and simplicity over clever or highly abstracted code.
-- **DRY (Don't Repeat Yourself):** Extract common logic into reusable utilities or components, but avoid premature abstraction.
-- **Error Handling:** Anticipate failures and handle them gracefully with descriptive error messages.
-
-## Agent Collaboration
-- **Clear Intent:** When using an agent, provide specific, high-level objectives.
-- **Context Management:** Use ignore files (`.gitignore`, `.geminiignore`, etc.) to keep the agent's context window focused on relevant files.
-- **Review Always:** Always review agent-generated code for security, performance, and stylistic consistency.\n\n<!-- b1CodingTool: Module Context [general] - conventions.md -->\n# General: Conventions
-
-## Git & Version Control
-- **Commit Messages:** Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
-  - `feat`: A new feature
-  - `fix`: A bug fix
-  - `docs`: Documentation only changes
-  - `style`: Changes that do not affect the meaning of the code (white-space, formatting, etc.)
-  - `refactor`: A code change that neither fixes a bug nor adds a feature
-  - `perf`: A code change that improves performance
-  - `test`: Adding missing tests or correcting existing tests
-  - `chore`: Changes to the build process or auxiliary tools and libraries
-- **Branching:** Use descriptive branch names (e.g., `feat/add-login`, `fix/issue-123`).
-
-## Documentation
-- **README.md:** Every project must have a `README.md` explaining the project's purpose, setup, and usage.
-- **GEMINI.md / CLAUDE.md:** Project-specific instructions for AI agents should be managed via `b1CodingTool` and committed to the repository.
-- **Inline Comments:** Use comments to explain *why* something is done, not *what* is being done (the code should be self-explanatory).
-
-## Naming & Style
-- **Agnostic Naming:** Use clear, descriptive names for all entities (variables, functions, classes).
-- **Consistency:** Adhere to the established patterns of the project, even if they differ from your personal preference.\n\n<!-- b1CodingTool: Module Context [general] - agent-capabilities.md -->\n# General: Agent Skills & Commands
-
-## Standard Skills
-- **README Generator:** Assists in creating a high-quality `README.md` based on project metadata.
-- **Change Summarizer:** Analyzes the `git diff` and generates a concise summary of changes.
-- **Context Optimizer:** Identifies large, irrelevant files that should be added to ignore lists to save context.
-
-## Common Commands
-- `/help`: List available commands and skills for the current project.
-- `/status`: Summarize current project state and pending tasks.
-- `/plan`: Request a structured implementation plan for a complex objective.
-- `/verify`: run tests and linters to confirm implementation correctness.\n\n<!-- b1CodingTool: Module Context [react-web] - best-practices.md -->\n# React Web: Best Practices
+This gives you filterable, colored log output during development with no production overhead.\n\n<!-- b1CodingTool: Module Context [react-web] - best-practices.md -->\n# React Web: Best Practices
 
 ## Component Design
 - **One responsibility per component.** If a component fetches data, transforms it, AND renders it, split it up. Keep presentational components free of data-fetching logic.
@@ -3286,7 +3239,75 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 | Secrets in environment variables, not source code | Security |
 | `min-instances: 1` on latency-sensitive services | Prevents cold starts for user-facing routes |
 | Migrations run in CI/CD, not at startup | Startup migration on concurrent cold starts causes race conditions |
-| Structured JSON logging | Parseable by cloud log aggregators |\n\n<!-- b1CodingTool: Module Context [django] - best-practices.md -->\n# Django: Best Practices
+| Structured JSON logging | Parseable by cloud log aggregators |\n\n<!-- b1CodingTool: Module Context [aws] - best-practices.md -->\n# AWS: Best Practices
+
+## Infrastructure as Code (IaC)
+- **Declarative over Imperative:** Use AWS CloudFormation, AWS CDK, or Terraform for all production infrastructure. Never use the AWS Console for manual resource creation in production.
+- **Version Control:** Commit all IaC templates to the repository and use automated CI/CD pipelines (e.g., AWS CodePipeline, GitHub Actions) for deployments.
+- **Modularity:** Break large infrastructure templates into smaller, reusable stacks or modules (e.g., Network, Database, Application).
+
+## Security & IAM
+- **Principle of Least Privilege:** Grant only the minimum permissions required for a task. Use IAM Roles for services (e.g., ECS tasks, Lambda functions) instead of IAM User keys.
+- **Encryption by Default:** Enable server-side encryption for S3 buckets, RDS databases, and EBS volumes using AWS KMS.
+- **Secret Management:** Use AWS Secrets Manager or AWS Systems Manager Parameter Store for sensitive configuration; never hardcode secrets in code or IaC templates.
+
+## Performance & Scalability
+- **Compute Selection:** Match the compute type to the workload:
+  - **Lambda:** Event-driven, ephemeral tasks.
+  - **ECS/Fargate:** Long-running containerized services.
+  - **EC2:** Specialized workloads requiring custom OS configuration.
+- **Auto Scaling:** Use Auto Scaling groups or ECS service scaling to handle fluctuating demand and minimize costs.
+
+## Cost Optimization
+- **Tagging:** Apply consistent tags (e.g., `Environment`, `Project`, `Owner`) to all resources for cost allocation and tracking.
+- **Right-sizing:** Monitor resource utilization (e.g., via CloudWatch) and adjust instance sizes to match actual needs.\n\n<!-- b1CodingTool: Module Context [aws] - conventions.md -->\n# AWS: Conventions
+
+## Resource Naming
+- **Uniqueness:** Use a consistent naming scheme that includes the project name and environment (e.g., `b1coding-prod-orders-bucket`).
+- **Casing:** Follow the conventions of the specific IaC tool (e.g., `PascalCase` for CloudFormation logical IDs, `snake_case` for Terraform resource names).
+
+## Tagging Strategy
+Required tags for all resources:
+| Tag | Purpose | Example |
+|-----|---------|---------|
+| `Project` | Identifier for the project | `b1CodingTool` |
+| `Environment` | Deploy stage | `dev`, `staging`, `prod` |
+| `Owner` | Responsible team or person | `platform-team` |
+| `ManagedBy` | Tool used for management | `terraform`, `cdk` |
+
+## Directory Structure (IaC)
+Recommended layout for infrastructure files:
+```
+infrastructure/
+├── aws/
+│   ├── base/           # VPC, IAM, shared roles
+│   ├── modules/        # Reusable component templates
+│   └── services/       # Feature-specific infrastructure
+│       ├── web-app.yml
+│       └── database.yml
+└── variables/          # Environment-specific params
+    ├── dev.json
+    └── prod.json
+```
+
+## Region Selection
+- **Proximity:** Deploy resources in regions closest to your user base to minimize latency.
+- **Compliance:** Ensure the selected region meets any data residency requirements.
+- **Service Availability:** Verify that required AWS services are available in the selected region.\n\n<!-- b1CodingTool: Module Context [aws] - agent-capabilities.md -->\n# AWS: Agent Commands & Skills
+
+## Recommended Skills
+- **Infrastructure Auditor:** Scans CloudFormation, SAM, or Terraform files for insecure configurations (e.g., overly broad IAM permissions, unencrypted S3 buckets).
+- **Serverless Config Generator:** Assists in creating `serverless.yml` or `template.yaml` files for Lambda-based projects.
+- **IAM Policy Builder:** Generates fine-grained IAM JSON policies based on the specific AWS actions the application needs to perform.
+
+## Common Agent Commands
+- `/aws audit`: Trigger a security audit of the `infrastructure/` directory.
+- `/aws lambda-init`: Generate a boilerplate AWS Lambda function and SAM template.
+- `/aws cost-check`: Provide advice on cost-saving measures based on the resource definitions found in the workspace.
+
+## Sync with b1
+- `b1 install aws`: Initializes the `infrastructure/aws` directory structure and adds AWS-specific agent context.
+- `b1 pair`: Ensures that AWS deployment guidelines are synchronized across all agent-specific instruction files.\n\n<!-- b1CodingTool: Module Context [django] - best-practices.md -->\n# Django: Best Practices
 
 ## Models & ORM
 - **Fat models, thin views.** Business logic belongs in model methods, managers, or a dedicated `services.py` — not in views.

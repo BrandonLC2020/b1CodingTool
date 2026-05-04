@@ -1,0 +1,11 @@
+name: aws
+version: 1.0.0
+type: deployment
+description: "Guidelines and configuration for preparing and deploying projects to AWS (ECS, Lambda, S3, etc.)."
+skills:
+  - name: "AWS Infrastructure Auditor"
+    description: "Assists in auditing CloudFormation or Terraform templates for security best practices."
+  - name: "Serverless Config Generator"
+    description: "Helps generate serverless.yml or SAM templates for AWS Lambda deployments."
+hooks:
+  post-install: "scripts/post-install.sh"
