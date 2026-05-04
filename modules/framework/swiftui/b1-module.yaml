@@ -1,0 +1,11 @@
+name: swiftui
+version: 1.0.0
+type: development
+description: "SwiftUI framework standards, declarative UI best practices, and modern state management guidelines."
+skills:
+  - name: "SwiftUI View Generator"
+    description: "Assists in creating new SwiftUI Views with consistent structure and Previews."
+  - name: "SwiftUI State Architect"
+    description: "Guidance on selecting the appropriate state management tool (@State, @Binding, @Observable)."
+hooks:
+  post-install: "scripts/post-install.sh"
