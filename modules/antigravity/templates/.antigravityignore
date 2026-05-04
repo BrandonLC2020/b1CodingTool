@@ -1,0 +1,24 @@
+# .antigravityignore for b1CodingTool Projects
+
+# Dependency folders
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+
+# Build artifacts
+dist/
+build/
+.next/
+out/
+.agent/modules/*/  # Don't let agents over-analyze installed module source
+
+# b1 internal
+.agent/cache/
+
+# Secret protection
+.env
+.env.local
+*.pem
+*.key
+.gemini_security/

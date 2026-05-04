@@ -1,0 +1,11 @@
+name: antigravity
+version: 1.0.0
+type: development
+description: "Guidelines and configuration for the Google Antigravity agent-first IDE."
+skills:
+  - name: "Mission Control Assistant"
+    description: "Assists in defining objectives and task lists for autonomous agents in Antigravity."
+  - name: "Verification Walkthrough"
+    description: "Guidance for creating browser-based verification walkthroughs using Antigravity's built-in browser agent."
+hooks:
+  post-install: "scripts/post-install.sh"

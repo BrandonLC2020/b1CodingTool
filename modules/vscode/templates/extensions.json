@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "eamodio.gitlens",
+    "usernamehw.errorlens",
+    "alefragnani.project-manager",
+    "humao.rest-client",
+    "aaron-bond.better-comments",
+    "charliermarsh.ruff",
+    "ms-python.python",
+    "ms-vscode.cpptools",
+    "ms-vscode.makefile-tools",
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint"
+  ]
+}

@@ -3239,7 +3239,168 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 | Secrets in environment variables, not source code | Security |
 | `min-instances: 1` on latency-sensitive services | Prevents cold starts for user-facing routes |
 | Migrations run in CI/CD, not at startup | Startup migration on concurrent cold starts causes race conditions |
-| Structured JSON logging | Parseable by cloud log aggregators |\n\n<!-- b1CodingTool: Module Context [django] - best-practices.md -->\n# Django: Best Practices
+| Structured JSON logging | Parseable by cloud log aggregators |\n\n<!-- b1CodingTool: Module Context [antigravity] - best-practices.md -->\n# Antigravity: Best Practices
+
+## Agent Management (Mission Control)
+- **Objective Definition:** Start every mission with a clear, high-level objective. Use "Planning Mode" to let the agent draft an implementation plan before writing code.
+- **Task Granularity:** Break down large missions into manageable sub-tasks. Monitor the task list in the Mission Control panel to ensure the agent stays on track.
+- **Human-in-the-Loop:** Use "Agent-Assisted" mode for production environments. Review the agent's plan and task list before authorizing the first execution.
+
+## Verification & Artifacts
+- **Implementation Plans:** Always review the agent's plan for architectural alignment and security considerations before implementation.
+- **Browser Agent:** Use the built-in browser sub-agent for E2E testing and documentation lookup. It ensures that UI changes are verified in a real browser environment.
+- **Walkthroughs:** Require the agent to provide a post-implementation walkthrough, including terminal logs and browser verification, to confirm the goal was met.
+
+## Performance & Context
+- **Selective Context:** Use `.geminiignore` or `.antigravityignore` to prevent the agent from processing irrelevant large directories like `node_modules` or `venv`.
+- **Policy Enforcement:** Set terminal execution policies to "Auto" or "Turbo" only for safe, idempotent commands (e.g., `ls`, `git status`, `npm test`).\n\n<!-- b1CodingTool: Module Context [antigravity] - conventions.md -->\n# Antigravity: Conventions
+
+## Naming & Structure
+- **Missions:** Use clear, action-oriented names for missions (e.g., `Add OAuth Login`, `Fix Memory Leak`).
+- **Agents:** If multiple agents are deployed, name them based on their roles (e.g., `FrontendArchitect`, `TestRunner`, `DocsCrawler`).
+
+## Execution Policies
+- **Terminal:** Default to "Auto" for most commands. Require explicit confirmation for destructive actions like `rm -rf`, `git push --force`, or database migrations.
+- **Browser:** Allow the agent to use the browser for searching documentation and verifying UI, but monitor for data exfiltration.
+
+## Interaction Patterns
+- **Plan First:** Always request a plan (`/plan`) before starting execution on any non-trivial task.
+- **Verify Always:** Use `/verify` to prompt the agent to run tests and provide a walkthrough after completing a task.
+- **Clear Constraints:** Provide explicit constraints (e.g., "Use Vanilla CSS", "Follow PEP 8") in the initial objective.\n\n<!-- b1CodingTool: Module Context [antigravity] - directory-structure.md -->\n# Antigravity: Directory Structure
+
+## Agent Workspace
+Antigravity manages missions and agents in an internal workspace, but interacts with the local file system through these artifacts:
+
+```
+.antigravity/ (Optional)
+├── policies.json       # Workspace-specific agent execution policies
+├── missions/           # History of implementation plans and walkthroughs
+└── .antigravityignore  # Files and folders to exclude from agent context
+```
+
+## Standard Exclusions
+Recommended `.antigravityignore` defaults:
+```
+# Dependency folders
+node_modules/
+.venv/
+__pycache__/
+
+# Build artifacts
+dist/
+build/
+.next/
+out/
+
+# Secret protection
+.env
+.env.local
+*.pem
+*.key
+```\n\n<!-- b1CodingTool: Module Context [antigravity] - commands.md -->\n# Antigravity: Commands & Workspace
+
+## Native Agent Commands
+- `/plan`: Request a detailed implementation plan and task list.
+- `/verify`: Instruct the agent to run tests and browser walkthroughs.
+- `/browse`: Launch the browser agent to search or interact with a URL.
+- `/reset`: Clear the current agent's short-term memory or session state.
+
+## Workspace Synchronization
+- **.antigravity/**: (Future) Local configuration for workspace-specific agent policies and mission history.
+- **b1 pair**: Synchronizes Antigravity guidelines into the `GEMINI.md` file, which is natively supported by the Antigravity agent engine.
+- **b1 install antigravity**: Sets up the necessary ignore files and baseline policies for a project.\n\n<!-- b1CodingTool: Module Context [vscode] - best-practices.md -->\n# Visual Studio Code: Best Practices
+
+## Performance
+- **Extension Leanliness:** Only enable necessary extensions for the current project. Use Workspace Recommendations to manage extensions per project.
+- **Search Exclusions:** Use `files.exclude` and `search.exclude` in `.vscode/settings.json` to keep search and file navigation fast by ignoring `node_modules`, `venv`, `build`, etc.
+
+## Workflow
+- **Auto Save:** Use `files.autoSave: "onFocusChange"` or `"afterDelay"` to minimize manual save overhead.
+- **Format on Save:** Enable `editor.formatOnSave` to ensure consistent code styling without manual intervention.
+- **Multi-root Workspaces:** Use `.code-workspace` files when working on multiple related repositories (e.g., frontend and backend) simultaneously.
+
+## Debugging
+- **Launch Configurations:** Always commit `.vscode/launch.json` to the repository if it contains project-wide debugging configurations.
+- **Variable Substitution:** Use `${workspaceFolder}`, `${file}`, and other predefined variables in launch configurations for portability.
+
+## Extensions
+- **Recommendations:** Use `.vscode/extensions.json` to recommend essential extensions for the project. This ensures a consistent developer experience for all team members.\n\n<!-- b1CodingTool: Module Context [vscode] - conventions.md -->\n# Visual Studio Code: Conventions
+
+## File Naming
+- **Settings:** Always use `.vscode/settings.json`.
+- **Extensions:** Always use `.vscode/extensions.json`.
+- **Launch:** Always use `.vscode/launch.json`.
+- **Tasks:** Always use `.vscode/tasks.json`.
+
+## Code Style
+- **Indentation:** Prefer spaces over tabs. Default to 2 or 4 spaces depending on the language module guidelines.
+- **Line Length:** Adhere to the `editor.rulers` defined in the workspace settings.
+- **Trailing Whitespace:** Enable `files.trimTrailingWhitespace` to keep files clean.
+- **Final Newline:** Enable `files.insertFinalNewline` for POSIX compliance.
+
+## Keybindings
+- **Conflicts:** Avoid overriding core VS Code keybindings unless essential for productivity.
+- **Extensions:** Use `when` clauses in keybindings to scope them to relevant file types or contexts.
+
+## Terminal
+- **Shell:** Use a consistent shell across the team (e.g., `zsh` or `bash` on macOS/Linux).
+- **Automation:** Use `.vscode/tasks.json` to define common terminal-based workflows like builds, tests, or linting.\n\n<!-- b1CodingTool: Module Context [vscode] - directory-structure.md -->\n# Visual Studio Code: Directory Structure
+
+## Workspace Metadata
+```
+.vscode/
+├── settings.json       # Workspace settings (overrides user settings)
+├── extensions.json     # Recommended extensions for the project
+├── launch.json         # Debugging configurations
+├── tasks.json          # Task definitions (build, test, etc.)
+└── snippets/           # Project-specific code snippets
+    └── python.json
+```
+
+## Global vs. Workspace
+- **.vscode/**: Contains settings that apply ONLY to this workspace. This directory SHOULD be committed to version control.
+- **.gitignore**: Ensure that private/local VS Code files (like `*.code-workspace` if specific to your machine) are ignored, but `.vscode/*.json` should generally be tracked.\n\n<!-- b1CodingTool: Module Context [vscode] - commands.md -->\n# Visual Studio Code: Commands
+
+While b1CodingTool manages global context, these commands are recommended for agents to help manage the VS Code workspace directly.
+
+## Recommended Agent Commands
+- **Setup Workspace:** Ensure the `.vscode` directory and standard files exist.
+- **Manage Extensions:** Add or remove extension recommendations in `.vscode/extensions.json`.
+- **Manage Settings:** Update workspace-specific settings in `.vscode/settings.json`.
+
+## Integration with b1
+When the `vscode` module is installed, the following actions are available:
+- `b1 install vscode`: Automatically initializes the `.vscode` directory with project-standard templates.
+- `b1 pair`: Ensures that VS Code-specific guidelines are synchronized across all agent-specific instruction files (`CLAUDE.md`, `GEMINI.md`, etc.).\n\n<!-- b1CodingTool: Module Context [vscode] - settings-and-extensions.md -->\n# Visual Studio Code: Settings & Extensions
+
+## Core Settings
+Recommended `settings.json` defaults for any `b1CodingTool` project:
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.rulers": [80, 100],
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.autoSave": "onFocusChange"
+}
+```
+
+## Recommended Extensions
+Essential extensions for general software development:
+- **GitLens**: Supercharge Git capabilities within VS Code.
+- **Error Lens**: Highlight errors and warnings inline.
+- **Project Manager**: Quickly switch between projects.
+- **REST Client**: Execute HTTP requests directly from VS Code.
+- **Better Comments**: Create more human-friendly comments.
+
+## Language Specifics
+- **Python**: Microsoft Python Extension, Ruff.
+- **JavaScript/TypeScript**: ESLint, Prettier.
+- **Flutter**: Flutter/Dart extensions.
+- **Swift**: Swift extension (v2.0+).
+- **Markdown**: Markdown All in One, MarkdownLint.\n\n<!-- b1CodingTool: Module Context [django] - best-practices.md -->\n# Django: Best Practices
 
 ## Models & ORM
 - **Fat models, thin views.** Business logic belongs in model methods, managers, or a dedicated `services.py` — not in views.

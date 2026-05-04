@@ -1,0 +1,9 @@
+name: vscode
+version: 1.0.0
+type: development
+description: "Visual Studio Code configuration, extensions, and workspace standards."
+skills:
+  - name: "VS Code Config Generator"
+    description: "Generate or update .vscode/settings.json and extensions.json based on project modules."
+hooks:
+  post-install: "scripts/post-install.sh"
