@@ -1,0 +1,11 @@
+name: general
+version: 1.0.0
+type: cross_cutting
+description: "Agnostic foundation for all b1CodingTool projects. Includes universal conventions, best practices, and base agent capabilities."
+skills:
+  - name: "Agnostic README Generator"
+    description: "Generates or updates a project README.md following the b1 standard structure."
+  - name: "Change Summarizer"
+    description: "Summarizes recent code changes for commit messages or status updates."
+hooks:
+  post-install: "scripts/post-install.sh"
