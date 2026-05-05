@@ -7,5 +7,10 @@ skills:
     description: "Assists in creating Pydantic schemas for Django Ninja endpoints."
   - name: "Ninja API Scout"
     description: "Helps identify and configure Django Ninja API routers and authentication."
+commands:
+  - name: "/ninja setup"
+    description: "Initialize the NinjaAPI and basic router structure"
+  - name: "/ninja schema"
+    description: "Generate a Pydantic schema from a Django model"
 hooks:
   post-install: "scripts/post-install.sh"

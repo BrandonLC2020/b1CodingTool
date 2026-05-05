@@ -15,6 +15,11 @@ class SkillConfig(BaseModel):
     name: str = Field(..., description="Name of the skill")
     description: Optional[str] = Field(None, description="Brief description of what this skill does")
     install_command: Optional[str] = Field(None, description="Shell command to install/prepare this skill (e.g., npx set up)")
+
+class CommandConfig(BaseModel):
+    name: str = Field(..., description="The slash command name (e.g., /setup-flutter-bloc)")
+    description: Optional[str] = Field(None, description="Brief description of what the command does")
+    usage: Optional[str] = Field(None, description="Example usage of the command")
     
 class ModuleConfig(BaseModel):
     name: str
@@ -22,6 +27,7 @@ class ModuleConfig(BaseModel):
     type: ModuleType
     description: Optional[str] = None
     skills: List[SkillConfig] = Field(default_factory=list)
+    commands: List[CommandConfig] = Field(default_factory=list)
     hooks: dict = Field(default_factory=dict)
     
     @field_validator("name")

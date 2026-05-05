@@ -7,5 +7,14 @@ skills:
     description: "Generates or updates a project README.md following the b1 standard structure."
   - name: "Change Summarizer"
     description: "Summarizes recent code changes for commit messages or status updates."
+commands:
+  - name: "/help"
+    description: "List available commands and skills for the current project"
+  - name: "/status"
+    description: "Summarize current project state and pending tasks"
+  - name: "/plan"
+    description: "Request a structured implementation plan for a complex objective"
+  - name: "/verify"
+    description: "Run tests and linters to confirm implementation correctness"
 hooks:
   post-install: "scripts/post-install.sh"

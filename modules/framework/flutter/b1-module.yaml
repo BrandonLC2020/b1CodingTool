@@ -7,5 +7,12 @@ skills:
     description: "Automated generation of BLoC/Cubit files (State, Event, Bloc) with boilerplate."
   - name: "Flutter Logging Setup"
     description: "Assists in configuring the global BlocObserver and structured logging (logger package)."
+commands:
+  - name: "/setup-flutter-bloc"
+    description: "Scaffold a new BLoC/Cubit for a feature"
+    usage: "/setup-flutter-bloc <feature-name>"
+  - name: "/gen-models"
+    description: "Run build_runner to generate models"
+    usage: "/gen-models"
 hooks:
   post-install: "scripts/post-install.sh"

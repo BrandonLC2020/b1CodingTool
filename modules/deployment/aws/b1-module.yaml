@@ -7,5 +7,12 @@ skills:
     description: "Assists in auditing CloudFormation or Terraform templates for security best practices."
   - name: "Serverless Config Generator"
     description: "Helps generate serverless.yml or SAM templates for AWS Lambda deployments."
+commands:
+  - name: "/aws audit"
+    description: "Trigger a security audit of the infrastructure/ directory"
+  - name: "/aws lambda-init"
+    description: "Generate a boilerplate AWS Lambda function and SAM template"
+  - name: "/aws cost-check"
+    description: "Provide advice on cost-saving measures based on the resource definitions"
 hooks:
   post-install: "scripts/post-install.sh"

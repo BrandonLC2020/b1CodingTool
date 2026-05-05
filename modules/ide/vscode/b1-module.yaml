@@ -5,5 +5,12 @@ description: "Visual Studio Code configuration, extensions, and workspace standa
 skills:
   - name: "VS Code Config Generator"
     description: "Generate or update .vscode/settings.json and extensions.json based on project modules."
+commands:
+  - name: "/vscode setup"
+    description: "Ensure the .vscode directory and standard files exist"
+  - name: "/vscode extensions"
+    description: "Manage extension recommendations in .vscode/extensions.json"
+  - name: "/vscode settings"
+    description: "Update workspace-specific settings in .vscode/settings.json"
 hooks:
   post-install: "scripts/post-install.sh"
