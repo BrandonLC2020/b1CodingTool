@@ -63,88 +63,45 @@ It contains app logic, directory structures, and active tasks.
 - `ContextCompiler` assembles content in order: root `agent.md` → `.agent/project/agent.md` → each installed module's `context/*.md` files.
 
 ## Architecture Notes
-- Follow the guidelines specified in the root `agent.md`.\n\n<!-- b1CodingTool: Module Context [version-control] - best-practices.md -->\n# Version Control: Best Practices
+- Follow the guidelines specified in the root `agent.md`.\n\n<!-- b1CodingTool: Module Context [security] - best-practices.md -->\n# API Security: Best Practices
 
-## Secret Protection (Critical)
-- **Never Commit Secrets:** Do not commit API keys, passwords, private keys, or credentials to version control.
-- **Use .env Files:** Store local secrets in `.env` files and ensure `.env` is listed in `.gitignore`.
-- **Environment Variables:** Use system environment variables or secure vault services (e.g., GitHub Secrets, AWS Secrets Manager) for production credentials.
-- **Git Hooks:** Use pre-commit hooks (e.g., `gitleaks`, `trufflehog`) to scan for secrets before they are committed.
-- **History Cleanup:** If a secret is committed by mistake, use `git-filter-repo` or BFG Repo-Cleaner to purge it from the entire history. Revoke the secret immediately.
+## Zero Public Exposure
+- **Auth by Default:** All endpoints should require authentication by default. Use an allow-list for the few truly public endpoints (e.g., login, documentation, health-check).
+- **No Naked Endpoints:** Never expose backend endpoints without a secondary layer of protection (e.g., API Gateway, WAF, or Reverse Proxy).
+- **Internal APIs:** Ensure internal/management APIs are isolated on private networks and not reachable from the public internet.
 
-## Repository Hygiene
-- **Atomic Commits:** Make small, focused commits that do one thing well. Avoid "giant" commits.
-- **Descriptive Messages:** Follow the Conventional Commits specification (`feat:`, `fix:`, `chore:`, etc.).
-- **Ignore files:** Maintain a robust `.gitignore` and agent-specific ignore files (`.geminiignore`, `.claudeignore`) to keep the repository clean.
-- **Large Files:** Use Git LFS (Large File Storage) for binary assets or large data files.
+## Rate Limiting & Throttling
+- **Graceful Throttling:** Implement rate limits at multiple levels (IP-based, User-based, and Global).
+- **Informative Responses:** Return `429 Too Many Requests` with a `Retry-After` header. Provide clear feedback to the client rather than just dropping the connection.
+- **Circuit Breakers:** Implement circuit breakers for downstream services to prevent cascading failures during traffic spikes or outages.
 
-## Branch Management
-- **Main/Master Branch:** The `main` branch should always be deployable and protected.
-- **Feature Branching:** Create short-lived feature branches (`feat/name`) for all new work.
-- **Pull Requests:** Use PRs for code review and automated testing before merging into the main branch.\n\n<!-- b1CodingTool: Module Context [version-control] - conventions.md -->\n# Version Control: Conventions
+## Data Integrity & Validation
+- **Input Validation:** Treat all external input as malicious. Use strict schemas (e.g., Pydantic, Zod, JSON Schema) to validate request bodies, query params, and headers.
+- **Sanitization:** Sanitize data before using it in database queries (SQLi protection), shell commands, or HTML rendering (XSS protection).
+- **Encryption:** Use TLS 1.2+ for all data in transit. Encrypt sensitive data at rest using strong cryptographic standards (e.g., AES-256).
 
-## Commit Casing
-Follow Conventional Commits:
-| Type | Use Case |
-|------|----------|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `docs` | Documentation updates |
-| `style` | Formatting, missing semi-colons, etc. |
-| `refactor` | Code restructuring without behavior change |
-| `test` | Adding or updating tests |
-| `chore` | Build tasks, package updates |
+## Observability & Defense
+- **Audit Logging:** Log all security-significant events (login attempts, permission changes, rate-limit hits) with relevant context (user ID, IP, timestamp).
+- **Security Headers:** Enforce security headers like `Content-Security-Policy`, `X-Frame-Options`, and `Strict-Transport-Security`.
+- **Fail Securely:** Ensure that if a security check fails, the application defaults to a "deny" state rather than continuing with partial permissions.\n\n<!-- b1CodingTool: Module Context [security] - conventions.md -->\n# API Security: Conventions
 
-## Commit Message Format
-`<type>(<scope>): <description>`
-Example: `feat(auth): add OAuth2 login flow`
+## Error Responses
+Always use standardized HTTP status codes for security events:
+| Code | Meaning | Context |
+|------|---------|---------|
+| `401` | Unauthorized | Missing or invalid authentication token. |
+| `403` | Forbidden | Authenticated but lacking necessary permissions. |
+| `429` | Too Many Requests | Rate limit exceeded. |
+| `503` | Service Unavailable | Circuit breaker is open. |
 
-## Ignoring Files
-Required entries in every `.gitignore`:
-```
-# Secrets
-.env
-*.pem
-*.key
+## Header Standards
+Required security headers for production APIs:
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `Content-Security-Policy: default-src 'none'; ...`
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains`
 
-# Local config
-.agent/config.yaml (if local-only)
-*.code-workspace
-
-# OS files
-.DS_Store
-Thumbs.db
-```\n\n<!-- b1CodingTool: Module Context [github-actions] - best-practices.md -->\n# GitHub Actions: Best Practices
-
-## Workflow Design
-- **Single Responsibility:** Each workflow file (`.github/workflows/*.yml`) should focus on a specific task (e.g., `test.yml`, `deploy.yml`).
-- **Reuse Actions:** Use official or verified actions from the GitHub Marketplace. Prefer internal reusable workflows for organization-wide standards.
-- **Fail Fast:** Place fast-running tasks (linting, unit tests) early in the pipeline to provide quick feedback.
-
-## Security
-- **Least Privilege:** Use the `permissions` key in workflow files to grant only the minimum necessary tokens (e.g., `contents: read`, `deployments: write`).
-- **Secret Usage:** Use `${{ secrets.SECRET_NAME }}` for all credentials. Never echo secrets into logs.
-- **Pin Actions:** Pin actions to a specific commit SHA rather than a version tag (e.g., `v1`) to prevent supply-chain attacks.
-- **Environment Protection:** Use GitHub Environments with required reviewers for production deployments.
-
-## Performance
-- **Caching:** Use `actions/cache` to speed up dependency installation for npm, pip, etc.
-- **Job Concurrency:** Use `concurrency` groups to cancel in-progress runs when a new commit is pushed to the same branch.
-- **Matrix Builds:** Use `strategy/matrix` to test across multiple versions of languages or OSs efficiently.\n\n<!-- b1CodingTool: Module Context [github-actions] - conventions.md -->\n# GitHub Actions: Conventions
-
-## File Naming
-- Workflows live in `.github/workflows/`.
-- Use `kebab-case.yml` for filenames (e.g., `ci-pipeline.yml`, `auto-tag.yml`).
-
-## Job Naming
-- Use clear, descriptive names for jobs and steps (e.g., `Job: Run Unit Tests`, `Step: Install dependencies`).
-
-## Directory Structure
-```
-.github/
-├── workflows/
-│   ├── main.yml        # Primary CI pipeline
-│   └── release.yml     # Production deployment
-├── actions/            # Custom local actions
-└── scripts/            # Helper scripts for workflows
-```\n\n
+## Naming & Access
+- Use `/api/v1/private/...` for internal/admin routes.
+- Use `/api/v1/public/...` only for explicitly reviewed public endpoints.
+- Environment variables for security settings should follow the `SEC_...` prefix (e.g., `SEC_API_KEY_ROTATION_DAYS`).\n\n

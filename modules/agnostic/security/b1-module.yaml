@@ -1,0 +1,11 @@
+name: security
+version: 1.0.0
+type: cross_cutting
+description: "Agnostic standards for API security, backend integrity, and production-ready defense mechanisms."
+skills:
+  - name: "Endpoint Security Auditor"
+    description: "Identifies exposed or insecurely configured API endpoints."
+  - name: "Rate Limit Architect"
+    description: "Assists in designing graceful rate limiting and throttling strategies."
+hooks:
+  post-install: "scripts/post-install.sh"
