@@ -1,6 +1,11 @@
 name: flutter
-version: 1.0.0
+version: 1.1.0
 type: development
-description: "Coding conventions, best practices, and project structure guidelines for Flutter/Dart development."
-skills: []
-hooks: {}
+description: "Coding conventions, best practices, and project structure guidelines for Flutter/Dart development. Includes BLoC patterns and automated setup."
+skills:
+  - name: "BLoC Scaffolder"
+    description: "Automated generation of BLoC/Cubit files (State, Event, Bloc) with boilerplate."
+  - name: "Flutter Logging Setup"
+    description: "Assists in configuring the global BlocObserver and structured logging (logger package)."
+hooks:
+  post-install: "scripts/post-install.sh"
