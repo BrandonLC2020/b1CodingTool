@@ -104,3 +104,7 @@ The Python CLI (managed via `uv`, built with Typer and Rich) will support the fo
 5.  **Phase 5: Dashboard Integration**
     * Scaffold the React frontend.
     * Build a local FastAPI or standard Python HTTP server within the CLI to serve data (installed modules, API usage) to the React frontend.
+6.  **Phase 6: Model Context Protocol (MCP) Integration**
+    * Standardize agent interaction via the official `mcp` SDK.
+    * Implement an MCP server in `src/b1/server/mcp_server.py`.
+    * Map core `b1` tools and context resources to MCP protocols for dynamic, two-way agent communication.
