@@ -15,14 +15,14 @@ def extract_github_slug(input_str: str) -> tuple[str, str] | None:
         return match.group(1), match.group(2)
     return None
 
-def link_github_cmd(repo_input: str):
+def run_link_github(repo_input: str) -> dict:
     """
-    Links the current project to a GitHub repository.
+    Core logic to link a project to a GitHub repository.
+    Returns a dict with linked info or raises an exception.
     """
     slug = extract_github_slug(repo_input)
     if not slug:
-        console.print(f"[red]Error:[/red] Could not parse GitHub owner/repo from '{repo_input}'")
-        raise typer.Exit(code=1)
+        raise ValueError(f"Could not parse GitHub owner/repo from '{repo_input}'")
         
     owner, repo = slug
     
@@ -41,7 +41,6 @@ def link_github_cmd(repo_input: str):
             default_branch = data["defaultBranchRef"]["name"]
         else:
             # 2. Fallback to git ls-remote to check existence and default branch
-            console.print(f"[yellow]Warning:[/yellow] 'gh' CLI failed or not available. Falling back to 'git ls-remote'...")
             ls_remote = subprocess.run(
                 ["git", "ls-remote", "--symref", f"https://github.com/{owner}/{repo}.git", "HEAD"],
                 capture_output=True,
@@ -49,17 +48,16 @@ def link_github_cmd(repo_input: str):
                 check=False
             )
             if ls_remote.returncode == 0:
-                # Example output: ref: refs/heads/main	HEAD
                 match = re.search(r"ref: refs/heads/([\w.-]+)\s+HEAD", ls_remote.stdout)
                 default_branch = match.group(1) if match else "main"
                 github_owner = owner
                 github_repo = repo
             else:
-                console.print(f"[red]Error:[/red] Could not verify repository '{owner}/{repo}'.")
-                raise typer.Exit(code=1)
+                raise ValueError(f"Could not verify repository '{owner}/{repo}'.")
     except Exception as e:
-        console.print(f"[red]Error:[/red] An unexpected error occurred: {e}")
-        raise typer.Exit(code=1)
+        if isinstance(e, ValueError):
+            raise e
+        raise RuntimeError(f"An unexpected error occurred: {e}")
 
     # Update config
     project_dir = Path.cwd()
@@ -70,4 +68,19 @@ def link_github_cmd(repo_input: str):
     config.upstream_repo = f"{github_owner}/{github_repo}"
     config.save(project_dir)
     
-    console.print(f"[green]Success![/green] Project linked to [bold]{github_owner}/{github_repo}[/bold] (default branch: [blue]{default_branch}[/blue])")
+    return {
+        "owner": github_owner,
+        "repo": github_repo,
+        "default_branch": default_branch
+    }
+
+def link_github_cmd(repo_input: str):
+    """
+    Links the current project to a GitHub repository.
+    """
+    try:
+        info = run_link_github(repo_input)
+        console.print(f"[green]Success![/green] Project linked to [bold]{info['owner']}/{info['repo']}[/bold] (default branch: [blue]{info['default_branch']}[/blue])")
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {str(e)}")
+        raise typer.Exit(code=1)
