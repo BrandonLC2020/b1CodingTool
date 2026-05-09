@@ -79,3 +79,25 @@ def test_compile_includes_github_metadata(tmp_path):
     assert "<!-- b1CodingTool: GitHub Repository -->" in result
     assert "https://github.com/brandon/b1CodingTool" in result
     assert "Default Branch: main" in result
+
+
+def test_compile_includes_module_capabilities(tmp_path):
+    import yaml
+    mod_dir = tmp_path / ".agent" / "modules" / "flutter"
+    mod_dir.mkdir(parents=True)
+    
+    config = {
+        "name": "flutter",
+        "version": "1.0.0",
+        "type": "development",
+        "skills": [{"name": "Skill 1", "description": "Desc 1"}],
+        "commands": [{"name": "/cmd1", "description": "Cmd 1 desc"}]
+    }
+    (mod_dir / "b1-module.yaml").write_text(yaml.dump(config))
+    
+    result = ContextCompiler(tmp_path).compile()
+    assert "### flutter Capabilities" in result
+    assert "#### Commands" in result
+    assert "- `/cmd1`: Cmd 1 desc" in result
+    assert "#### Skills" in result
+    assert "- **Skill 1**: Desc 1" in result
