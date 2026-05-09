@@ -1,0 +1,13 @@
+description: 'Community skill: Git collaboration playbook for agents. Use when performing
+  or advising on git operations, drafting commits, branch names, PR/MR descriptions,
+  issue reports, code review comments, release notes, changelog entries, or GitHub/GitLab
+  discussion posts.'
+name: community-git-collaboration
+skills:
+- description: Git collaboration playbook for agents. Use when performing or advising
+    on git operations, drafting commits, branch names, PR/MR descriptions, issue reports,
+    code review comments, release notes, changelog entries, or GitHub/GitLab discussion
+    posts.
+  name: git-collaboration
+type: cross_cutting
+version: 1.0.0
