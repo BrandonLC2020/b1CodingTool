@@ -32,8 +32,10 @@ src/b1/
     config.py          # Reads/writes .agent/config.yaml (B1Config model)
   server/main.py       # FastAPI server that serves data to the React dashboard
 dashboard/             # React frontend (Vite + TypeScript)
-docs/                  # Planning docs and SPEC.md
+docs/                  # Planning docs, SPEC.md, and MODULE_GUIDE.md
 ```
+
+For detailed information on creating and structuring modules, refer to the **[Module Authoring Guide](docs/MODULE_GUIDE.md)**.
 
 ## Synergy: Public & Private Repositories
 To maintain an open-source core while keeping your "secret sauce" private:

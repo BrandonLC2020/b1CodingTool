@@ -33,7 +33,12 @@ uv sync
 
 ## Module system
 
-Modules encapsulate framework- or domain-specific context for your AI agent. Each module is a directory containing:
+Modules encapsulate framework- or domain-specific context for your AI agent. Each module is a directory containing a manifest, context guidelines, and optional skills, commands, and hooks.
+
+See the **[Module Authoring Guide](docs/MODULE_GUIDE.md)** for detailed instructions on creating your own modules.
+
+### Directory structure
+A typical module directory contains:
 
 ```
 my-module/
