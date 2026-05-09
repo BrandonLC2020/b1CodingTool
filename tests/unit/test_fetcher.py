@@ -1,5 +1,6 @@
 # tests/unit/test_fetcher.py
 import subprocess
+import os
 import pytest
 import yaml
 from pathlib import Path
@@ -83,3 +84,30 @@ def test_fetch_git_url_raises_on_clone_failure(tmp_path):
         mock_run.side_effect = subprocess.CalledProcessError(1, "git", stderr=b"auth failed")
         with pytest.raises(NetworkError):
             fetcher.fetch("https://github.com/org/my-module.git")
+def test_fetch_by_name_with_library_path(tmp_path):
+    # Setup library structure: lib/modules/framework/my-module
+    lib_root = tmp_path / "lib"
+    mod_dir = lib_root / "modules" / "framework" / "my-module"
+    mod_dir.mkdir(parents=True)
+    (mod_dir / "b1-module.yaml").write_text("name: my-module", encoding="utf-8")
+    
+    fetcher = _fetcher(tmp_path)
+    with patch.dict(os.environ, {"B1_LIBRARY_PATH": str(lib_root)}):
+        result = fetcher.fetch("my-module")
+        assert result == mod_dir
+
+
+def test_fetch_by_name_fallback_to_git(tmp_path):
+    # lib_root exists but doesn't have the module
+    lib_root = tmp_path / "lib"
+    (lib_root / "modules").mkdir(parents=True)
+    
+    fetcher = _fetcher(tmp_path)
+    with patch.dict(os.environ, {"B1_LIBRARY_PATH": str(lib_root)}):
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            fetcher.fetch("https://github.com/org/my-module.git")
+            
+            # Should still try to clone because it wasn't in the library
+            assert mock_run.called
+            assert mock_run.call_args[0][0][1] == "clone"

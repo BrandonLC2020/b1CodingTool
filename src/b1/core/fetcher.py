@@ -17,7 +17,22 @@ class ModuleFetcher:
         Takes a source (either a git url or local path).
         Returns the pathlib.Path to the prepared module directory.
         """
-        # If it's a local path
+        # 1. Try to resolve by name from B1_LIBRARY_PATH if set
+        library_path_env = os.environ.get("B1_LIBRARY_PATH")
+        if library_path_env:
+            library_path = Path(library_path_env).expanduser().resolve()
+            if library_path.exists():
+                # Modules are typically in a 'modules' subdirectory
+                modules_base = library_path / "modules"
+                if modules_base.exists():
+                    # Look for source name in any category (modules/*/<source>)
+                    matches = list(modules_base.glob(f"*/{source}"))
+                    for match in matches:
+                        if match.is_dir() and ((match / "b1-module.yaml").exists() or (match / "module.yaml").exists()):
+                            console.print(f"[green]Resolved module '{source}' from library: {match}[/green]")
+                            return match
+
+        # 2. Existing logic: If it's a local path
         local_path = Path(source).expanduser().resolve()
         if local_path.exists() and local_path.is_dir():
             if (local_path / "b1-module.yaml").exists() or (local_path / "module.yaml").exists():
