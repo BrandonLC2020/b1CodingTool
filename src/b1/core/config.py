@@ -10,6 +10,7 @@ class B1Config(BaseModel):
     github_owner: Optional[str] = None
     github_repo: Optional[str] = None
     default_branch: Optional[str] = None
+    skillsmp_api_key: Optional[str] = None
     
     @classmethod
     def load(cls, project_dir: Path) -> "B1Config":

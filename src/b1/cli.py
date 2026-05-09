@@ -10,6 +10,7 @@ from b1.commands.pair import pair_cmd
 from b1.commands.dashboard import dashboard_cmd
 from b1.commands.link_clickup import link_clickup_cmd
 from b1.commands.link_github import link_github_cmd
+from b1.commands.skill import app as skill_app
 
 app = typer.Typer(
     name="b1",
@@ -27,6 +28,7 @@ app.command(name="pair")(pair_cmd)
 app.command(name="dashboard")(dashboard_cmd)
 app.command(name="link-to-clickup-list")(link_clickup_cmd)
 app.command(name="link-to-github-repo")(link_github_cmd)
+app.add_typer(skill_app, name="skill")
 
 def main():
     try:
