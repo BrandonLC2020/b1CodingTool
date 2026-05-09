@@ -6,6 +6,7 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from b1.core.schema import ModuleConfig
+from b1.core.hook_engine import HookEngine
 
 console = Console()
 
@@ -14,6 +15,7 @@ class ModuleInstaller:
         self.project_dir = target_project_dir
         self.modules_dir = self.project_dir / ".agent" / "modules"
         self.modules_dir.mkdir(parents=True, exist_ok=True)
+        self.hook_engine = HookEngine(self.project_dir)
         
     def install(self, source_path: Path, link: bool = False):
         # Locate the yaml file
@@ -63,9 +65,7 @@ class ModuleInstaller:
         # 3. Run lifecycle hooks
         if config.hooks:
             console.print("\n[bold]Running Lifecycle Hooks[/bold]")
-            for hook_name, hook_command in config.hooks.items():
-                if hook_name == "post-install":
-                    self._run_hook(hook_name, hook_command, target_mod_dir)
+            self.hook_engine.run_hooks("post-install", target_module=config.name)
 
         console.print(f"\n[bold green]Successfully installed {config.name}![/bold green] 🚀")
 
@@ -96,42 +96,4 @@ class ModuleInstaller:
                 progress.update(task, description=f"[red]✖[/red] Failed setup for [cyan]{name}[/cyan]")
                 console.print(f"[red]Error Output:[/red]\n{e.stderr}")
                 # Don't halt the whole installation if one skill script fails, just note it.
-
-    def _run_hook(self, name: str, command: str, execution_dir: Path):
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console
-        ) as progress:
-            task = progress.add_task(f"Running [cyan]{name}[/cyan] hook...", total=None)
-
-            try:
-                # Run the hook script
-                # We assume the command is relative to the module directory
-                script_path = execution_dir / command
-                if script_path.exists():
-                    # Make sure it's executable just in case
-                    os.chmod(script_path, 0o755)
-
-                    subprocess.run(
-                        [str(script_path)], 
-                        cwd=self.project_dir, # Run hooks from project root
-                        shell=False, 
-                        text=True, 
-                        capture_output=True,
-                        check=True,
-                        timeout=300 # 5 minute timeout
-                    )
-                    progress.update(task, description=f"[green]✔[/green] {name} hook completed")
-                else:
-                    progress.update(task, description=f"[yellow]⚠[/yellow] {name} hook script not found: {command}")
-            except subprocess.TimeoutExpired:
-                progress.update(task, description=f"[red]✖[/red] {name} hook timed out")
-                console.print(f"[red]Error:[/red] Hook timed out after 300s: {command}")
-            except subprocess.CalledProcessError as e:
-                progress.update(task, description=f"[red]✖[/red] {name} hook failed")
-                if e.stdout:
-                    console.print(f"[dim]Output:[/dim]\n{e.stdout}")
-                if e.stderr:
-                    console.print(f"[red]Error Output:[/red]\n{e.stderr}")
 

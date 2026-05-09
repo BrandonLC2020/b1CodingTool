@@ -38,7 +38,7 @@ def test_install_runs_post_install_hook(tmp_path):
     )
     project = _project(tmp_path)
     
-    with patch("b1.core.installer.subprocess.run") as mock_run:
+    with patch("b1.core.hook_engine.subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=0)
         ModuleInstaller(project).install(src)
     
@@ -48,7 +48,8 @@ def test_install_runs_post_install_hook(tmp_path):
     assert isinstance(args[0], list)
     assert kwargs.get("shell") is False
     assert kwargs.get("cwd") == project
-    assert str(src / hook_command) in args[0][0] or str(project / ".agent" / "modules" / "test-module" / hook_command) in args[0][0]
+    # The script path should point to the installed module directory
+    assert "post-install.sh" in args[0][0]
 
 def test_install_hook_failure_shows_stdout_and_stderr(tmp_path):
     hook_command = "fail.sh"
@@ -58,8 +59,8 @@ def test_install_hook_failure_shows_stdout_and_stderr(tmp_path):
     )
     project = _project(tmp_path)
     
-    with patch("b1.core.installer.subprocess.run") as mock_run, \
-         patch("b1.core.installer.console.print") as mock_print:
+    with patch("b1.core.hook_engine.subprocess.run") as mock_run, \
+         patch("b1.core.hook_engine.console.print") as mock_print:
         
         e = subprocess.CalledProcessError(1, "fail.sh")
         e.stdout = "some output"

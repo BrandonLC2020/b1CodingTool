@@ -56,6 +56,49 @@ def test_push_creates_branch_with_correct_prefix(make_project, monkeypatch):
     assert branch_call[3].startswith("b1-learnings-")
 
 
+def test_push_extracts_rules_and_stages_selectively(make_project, monkeypatch):
+    project = make_project(upstream_repo="org/repo")
+    monkeypatch.chdir(project)
+    
+    # Add a project agent file with generalized rules
+    project_agent = project / ".agent" / "project" / "agent.md"
+    project_agent.parent.mkdir(parents=True, exist_ok=True)
+    project_agent.write_text("""
+# Project Context
+<!-- b1:generalized:start -->
+## Rule 1
+General rule.
+<!-- b1:generalized:end -->
+""", encoding="utf-8")
+
+    # status --porcelain returns staged files
+    status_mock = MagicMock(stdout="M agent.md\n?? .agent/learnings.md\n", returncode=0)
+
+    with patch(_MOCK_WHICH, return_value="/usr/bin/gh"):
+        with patch(_MOCK_RUN) as mock_run:
+            mock_run.side_effect = [
+                _successful_run(),           # git checkout -b
+                _successful_run(),           # git add agent.md
+                _successful_run(),           # git add .agent/learnings.md
+                status_mock,                 # git status --porcelain
+                _successful_run(),           # git commit
+                _successful_run(),           # git push
+                _successful_run(stdout="https://github.com/org/repo/pull/1"),  # gh pr create
+            ]
+            runner.invoke(app, ["push"])
+
+    # Verify selective git add calls
+    add_calls = [c[0][0] for c in mock_run.call_args_list if c[0][0][0:2] == ["git", "add"]]
+    assert ["git", "add", "agent.md"] in add_calls
+    assert ["git", "add", ".agent/learnings.md"] in add_calls
+    # Ensure it did NOT add the whole .agent/ dir
+    assert ["git", "add", ".agent/"] not in add_calls
+    
+    # Verify learnings.md was created
+    assert (project / ".agent" / "learnings.md").exists()
+    assert "Rule 1" in (project / ".agent" / "learnings.md").read_text()
+
+
 def test_push_returns_cleanly_when_no_changes_to_stage(make_project, monkeypatch):
     project = make_project(upstream_repo="org/repo")
     monkeypatch.chdir(project)
@@ -66,7 +109,7 @@ def test_push_returns_cleanly_when_no_changes_to_stage(make_project, monkeypatch
         with patch(_MOCK_RUN) as mock_run:
             mock_run.side_effect = [
                 _successful_run(),   # git checkout -b
-                _successful_run(),   # git add .agent/
+                _successful_run(),   # git add agent.md (fails silently if doesn't exist)
                 empty_status,        # git status --porcelain (no changes)
                 _successful_run(),   # git checkout -
                 _successful_run(),   # git branch -d
