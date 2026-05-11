@@ -33,7 +33,8 @@ class ModuleInstaller:
         target_mod_dir = self.modules_dir / config.name
         
         # 1. Prepare target
-        if target_mod_dir.exists():
+        # Check if it exists or is a broken symlink (is_symlink() returns True even if broken)
+        if target_mod_dir.exists() or target_mod_dir.is_symlink():
             console.print(f"[yellow]Module {config.name} already installed. Overwriting...[/yellow]")
             if target_mod_dir.is_symlink():
                 target_mod_dir.unlink()

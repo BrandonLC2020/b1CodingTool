@@ -41,6 +41,7 @@ def run_link_github(repo_input: str) -> dict:
             default_branch = data["defaultBranchRef"]["name"]
         else:
             # 2. Fallback to git ls-remote to check existence and default branch
+            console.print("[yellow]Warning: 'gh' CLI failed or not found. Falling back to 'git ls-remote'...[/yellow]")
             ls_remote = subprocess.run(
                 ["git", "ls-remote", "--symref", f"https://github.com/{owner}/{repo}.git", "HEAD"],
                 capture_output=True,

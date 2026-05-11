@@ -26,27 +26,55 @@ class ModuleFetcher:
 
         # 1. Try to resolve by name from B1_LIBRARY_PATH if set
         library_path_env = os.environ.get("B1_LIBRARY_PATH")
+        potential_library_roots = []
         if library_path_env:
-            library_path = Path(library_path_env).expanduser().resolve()
-            if library_path.exists():
-                # Modules are typically in a 'modules' subdirectory
-                modules_base = library_path / "modules"
+            potential_library_roots.append(Path(library_path_env).expanduser().resolve())
+        
+        # Add the tool's own directory as a fallback library root
+        # fetcher.py is at src/b1/core/fetcher.py, so root is 3 levels up
+        tool_root = Path(__file__).resolve().parent.parent.parent.parent
+        if tool_root not in potential_library_roots:
+            potential_library_roots.append(tool_root)
+
+        for lib_root in potential_library_roots:
+            if lib_root.exists():
+                modules_base = lib_root / "modules"
                 if modules_base.exists():
-                    # Look for source name in any category (modules/*/<source>)
-                    matches = list(modules_base.glob(f"*/{source}"))
+                    # Strip trailing slashes and get the name part
+                    clean_source = source.rstrip("/")
+                    search_name = clean_source.split("/")[-1] if "/" in clean_source else clean_source
+                    
+                    # Try direct relative path first (e.g. modules/framework/react-native)
+                    direct_rel = lib_root / source
+                    if direct_rel.exists() and direct_rel.is_dir() and ((direct_rel / "b1-module.yaml").exists() or (direct_rel / "module.yaml").exists()):
+                        return direct_rel
+
+                    # Try searching for the name
+                    matches = list(modules_base.glob(f"**/{search_name}"))
                     for match in matches:
                         if match.is_dir() and ((match / "b1-module.yaml").exists() or (match / "module.yaml").exists()):
-                            console.print(f"[green]Resolved module '{source}' from library: {match}[/green]")
                             return match
 
-        # 2. Existing logic: If it's a local path
-        local_path = Path(source).expanduser().resolve()
-        if local_path.exists() and local_path.is_dir():
-            if (local_path / "b1-module.yaml").exists() or (local_path / "module.yaml").exists():
-                return local_path
+        # 2. Try as a local path (relative to CWD)
+        potential_paths = [
+            Path(source).expanduser(),
+            Path.cwd() / source,
+            Path.cwd() / "modules" / source
+        ]
+        
+        for p in potential_paths:
+            resolved = p.resolve()
+            if resolved.exists() and resolved.is_dir():
+                if (resolved / "b1-module.yaml").exists() or (resolved / "module.yaml").exists():
+                    return resolved
+
+        # 3. Specific error if directory found but missing module file
+        direct_path = Path(source).expanduser().resolve()
+        if direct_path.exists() and direct_path.is_dir():
+             raise ValueError(f"Found directory at '{direct_path}', but it contains no 'b1-module.yaml' or 'module.yaml'.")
                 
-        # If it looks like a Git URL
-        if source.startswith("http") or source.startswith("git@") or source.startswith("file://"):
+        # 4. If it looks like a Git URL
+        if source.startswith("http") or source.startswith("git@") or source.startswith("file://") or source.endswith(".git"):
             module_name = source.split("/")[-1].replace(".git", "")
             target_path = self.cache_dir / module_name
             

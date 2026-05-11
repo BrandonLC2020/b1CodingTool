@@ -43,7 +43,7 @@ def test_fetch_local_path_without_yaml_raises_value_error(tmp_path):
     bare_dir = tmp_path / "bare"
     bare_dir.mkdir()
     fetcher = _fetcher(tmp_path)
-    with pytest.raises(ValueError, match="Invalid module source or not found locally"):
+    with pytest.raises(ValueError, match="but it contains no 'b1-module.yaml' or 'module.yaml'"):
         fetcher.fetch(str(bare_dir))
 
 
