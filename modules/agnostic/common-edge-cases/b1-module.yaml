@@ -1,0 +1,10 @@
+name: common-edge-cases
+version: 1.0.0
+type: cross_cutting
+description: "Agnostic guidance for handling universal edge cases, Day 0 experiences, and robust application state."
+skills:
+  - name: "Edge Case Auditor"
+    description: "Audits code or plans for common edge cases like empty states, network failures, and input validation."
+commands:
+  - name: "/audit-edge-cases"
+    description: "Scan the current context or a specific file for missing edge case handling."
