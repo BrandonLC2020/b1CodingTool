@@ -1,0 +1,13 @@
+name: rust
+version: 1.0.0
+type: development
+description: "Core Rust language guidelines, focusing on high-performance CLI tools and general-purpose systems programming."
+skills:
+  - name: "Crate Architect"
+    description: "Scaffolds a standard workspace or CLI structure with clap and anyhow."
+  - name: "Safety Auditor"
+    description: "Reviews code for unsafe blocks and interior mutability, suggesting idiomatic safe alternatives."
+  - name: "Benchmark Generator"
+    description: "Generates criterion or iai benchmark stubs for performance-critical functions."
+  - name: "Error Handling Modernizer"
+    description: "Refactors legacy error handling to thiserror or anyhow patterns."
