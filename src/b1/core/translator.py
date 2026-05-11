@@ -44,15 +44,21 @@ class AgentTranslator:
             
             # Write individual section files
             for name, body in sections:
-                safe_name = self._safe_filename(name)
-                file_name = f"{safe_name}.md"
-                file_path = context_dir_path / file_name
+                relative_dir, file_name = self._get_file_info(name)
+                
+                # Make sure the target directory exists
+                target_dir = context_dir_path / relative_dir
+                target_dir.mkdir(parents=True, exist_ok=True)
+                
+                file_path = target_dir / file_name
                 
                 formatted_body = self._format_section(agent_upper, name, body)
                 file_path.write_text(formatted_body, encoding="utf-8")
                 
                 # Add to filemap list
-                filemap_links.append(f"- [{name}]({hidden_dir_name}/context/{file_name})")
+                # Build the relative path string ensuring forward slashes
+                rel_path = f"{hidden_dir_name}/context/{relative_dir}/{file_name}" if relative_dir else f"{hidden_dir_name}/context/{file_name}"
+                filemap_links.append(f"- [{name}]({rel_path})")
             
             # Generate the root filemap
             root_filename = f"{agent_upper}.md"
@@ -99,6 +105,25 @@ class AgentTranslator:
                     f.write("# b1CodingTool Generated\n")
                 for entry in entries_to_add:
                     f.write(f"{entry}\n")
+
+    def _get_file_info(self, name: str) -> tuple[str, str]:
+        """
+        Determines the subdirectory and filename based on the section name.
+        Example: 'Module Context [fastapi] - SKILL.md' -> ('fastapi', 'SKILL.md')
+                 'Root Context' -> ('', 'root_context.md')
+        """
+        # Match 'Module Context [module_name] - filename'
+        module_context_match = re.match(r"Module Context \[(.*?)\] - (.*)", name)
+        if module_context_match:
+            return module_context_match.group(1).strip(), module_context_match.group(2).strip()
+            
+        # Match 'Module Capabilities [module_name]'
+        module_cap_match = re.match(r"Module Capabilities \[(.*?)\]", name)
+        if module_cap_match:
+            return module_cap_match.group(1).strip(), "capabilities.md"
+            
+        # Default fallback (e.g. Root Context, Project Context)
+        return "", f"{self._safe_filename(name)}.md"
 
     def _safe_filename(self, name: str) -> str:
         """Converts section name to safe filename (e.g. 'Root Context' -> 'root_context')"""

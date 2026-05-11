@@ -10,6 +10,12 @@ Some content here.
 <!-- b1CodingTool: Project Context -->
 # Project specific
 App logic.
+
+<!-- b1CodingTool: Module Capabilities [fastapi] -->
+Fastapi capabilities here.
+
+<!-- b1CodingTool: Module Context [react-native] - SKILL.md -->
+React native skill content here.
 """
 
 
@@ -26,11 +32,21 @@ def test_generates_filemap_and_hidden_dirs(tmp_path):
     assert (tmp_path / ".gemini" / "context").is_dir()
     assert (tmp_path / ".codex" / "context").is_dir()
     
+    # Module subdirectories should exist
+    assert (tmp_path / ".claude" / "context" / "fastapi").is_dir()
+    assert (tmp_path / ".claude" / "context" / "react-native").is_dir()
+    
     # Individual context files should exist
     assert (tmp_path / ".claude" / "context" / "root_context.md").exists()
     assert (tmp_path / ".claude" / "context" / "project_context.md").exists()
+    assert (tmp_path / ".claude" / "context" / "fastapi" / "capabilities.md").exists()
+    assert (tmp_path / ".claude" / "context" / "react-native" / "SKILL.md").exists()
+    
     assert (tmp_path / ".gemini" / "context" / "root_context.md").exists()
     assert (tmp_path / ".gemini" / "context" / "project_context.md").exists()
+    assert (tmp_path / ".gemini" / "context" / "fastapi" / "capabilities.md").exists()
+    assert (tmp_path / ".gemini" / "context" / "react-native" / "SKILL.md").exists()
+    
     assert (tmp_path / ".codex" / "context" / "root_context.md").exists()
     assert (tmp_path / ".codex" / "context" / "project_context.md").exists()
 
@@ -42,12 +58,19 @@ def test_claude_filemap_and_content(tmp_path):
     root_content = (tmp_path / "CLAUDE.md").read_text(encoding="utf-8")
     assert ".claude/context/root_context.md" in root_content
     assert ".claude/context/project_context.md" in root_content
+    assert ".claude/context/fastapi/capabilities.md" in root_content
+    assert ".claude/context/react-native/SKILL.md" in root_content
     assert "instructions" in root_content.lower() or "read" in root_content.lower()
     
     # Content check
     section_content = (tmp_path / ".claude" / "context" / "root_context.md").read_text(encoding="utf-8")
     assert "<root_context>" in section_content
     assert "# Global Context" in section_content
+
+    # Module content check
+    react_native_content = (tmp_path / ".claude" / "context" / "react-native" / "SKILL.md").read_text(encoding="utf-8")
+    assert "<module_context_react_native___skill_md>" in react_native_content
+    assert "React native skill content here." in react_native_content
 
 
 def test_gemini_filemap_and_content(tmp_path):
