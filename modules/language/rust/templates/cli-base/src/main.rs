@@ -21,6 +21,6 @@ fn main() -> Result<()> {
 }
 
 fn run(name: &str) -> Result<()> {
-    println!("Hello, {}!", name);
+    tracing::info!("Hello, {}!", name);
     Ok(())
 }
