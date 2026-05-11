@@ -30,11 +30,15 @@ class AgentTranslator:
             # Setup hidden directory
             hidden_dir_name = f".{agent_lower}"
             hidden_dir_path = self.project_dir / hidden_dir_name
+            context_dir_path = hidden_dir_path / "context"
             
             # Clean up old context dir if it exists
-            if hidden_dir_path.exists():
-                shutil.rmtree(hidden_dir_path)
-            hidden_dir_path.mkdir(parents=True, exist_ok=True)
+            if context_dir_path.is_dir():
+                shutil.rmtree(context_dir_path)
+            elif context_dir_path.exists():
+                context_dir_path.unlink()
+            
+            context_dir_path.mkdir(parents=True, exist_ok=True)
             
             filemap_links = []
             
@@ -42,13 +46,13 @@ class AgentTranslator:
             for name, body in sections:
                 safe_name = self._safe_filename(name)
                 file_name = f"{safe_name}.md"
-                file_path = hidden_dir_path / file_name
+                file_path = context_dir_path / file_name
                 
                 formatted_body = self._format_section(agent_upper, name, body)
                 file_path.write_text(formatted_body, encoding="utf-8")
                 
                 # Add to filemap list
-                filemap_links.append(f"- [{name}]({hidden_dir_name}/{file_name})")
+                filemap_links.append(f"- [{name}]({hidden_dir_name}/context/{file_name})")
             
             # Generate the root filemap
             root_filename = f"{agent_upper}.md"
@@ -64,7 +68,37 @@ class AgentTranslator:
             final_root_content = header + instructions + "\n".join(filemap_links) + "\n"
             out_path.write_text(final_root_content, encoding="utf-8")
             
-            console.print(f"[green]✔ Generated:[/green] {root_filename} and {hidden_dir_name}/")
+            console.print(f"[green]✔ Generated:[/green] {root_filename} and {hidden_dir_name}/context/")
+
+        # Ensure .gitignore has these entries
+        self._update_gitignore(agents)
+
+    def _update_gitignore(self, agents: list[str]):
+        """Ensures generated files and hidden directories are in .gitignore"""
+        gitignore_path = self.project_dir / ".gitignore"
+        existing_lines = []
+        if gitignore_path.exists():
+            existing_lines = gitignore_path.read_text(encoding="utf-8").splitlines()
+            
+        entries_to_add = []
+        for agent in agents:
+            root_file = f"{agent.upper()}.md"
+            hidden_dir = f".{agent.lower()}/"
+            
+            if root_file not in existing_lines:
+                entries_to_add.append(root_file)
+            if hidden_dir not in existing_lines:
+                entries_to_add.append(hidden_dir)
+                
+        if entries_to_add:
+            mode = "a" if gitignore_path.exists() else "w"
+            with open(gitignore_path, mode, encoding="utf-8") as f:
+                if existing_lines and existing_lines[-1].strip() != "":
+                    f.write("\n")
+                if not existing_lines or "# b1CodingTool Generated" not in existing_lines:
+                    f.write("# b1CodingTool Generated\n")
+                for entry in entries_to_add:
+                    f.write(f"{entry}\n")
 
     def _safe_filename(self, name: str) -> str:
         """Converts section name to safe filename (e.g. 'Root Context' -> 'root_context')"""
