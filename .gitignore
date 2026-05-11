@@ -19,3 +19,11 @@ mock-module/
 .claude/settings.local.json
 .claude/worktrees/
 .worktrees/
+
+# b1CodingTool Generated
+CLAUDE.md
+.claude/
+GEMINI.md
+.gemini/
+CODEX.md
+.codex/
