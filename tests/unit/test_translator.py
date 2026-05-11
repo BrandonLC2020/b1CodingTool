@@ -13,30 +13,60 @@ App logic.
 """
 
 
-def test_generates_file_for_each_agent(tmp_path):
+def test_generates_filemap_and_hidden_dirs(tmp_path):
     AgentTranslator(tmp_path).generate_files(["CLAUDE", "GEMINI"], COMPILED)
+    
+    # Root filemaps should exist
     assert (tmp_path / "CLAUDE.md").exists()
     assert (tmp_path / "GEMINI.md").exists()
+    
+    # Hidden dirs should exist
+    assert (tmp_path / ".claude").is_dir()
+    assert (tmp_path / ".gemini").is_dir()
+    
+    # Individual context files should exist
+    assert (tmp_path / ".claude" / "root_context.md").exists()
+    assert (tmp_path / ".claude" / "project_context.md").exists()
+    assert (tmp_path / ".gemini" / "root_context.md").exists()
+    assert (tmp_path / ".gemini" / "project_context.md").exists()
 
 
-def test_claude_contains_xml_tags(tmp_path):
+def test_claude_filemap_and_content(tmp_path):
     AgentTranslator(tmp_path).generate_files(["CLAUDE"], COMPILED)
-    content = (tmp_path / "CLAUDE.md").read_text(encoding="utf-8")
-    assert "<project_context>" in content
-    assert "<root_context>" in content
-    assert "<project_context>" in content
-    assert "# Global Context" in content
+    
+    # Filemap check
+    root_content = (tmp_path / "CLAUDE.md").read_text(encoding="utf-8")
+    assert ".claude/root_context.md" in root_content
+    assert ".claude/project_context.md" in root_content
+    assert "instructions" in root_content.lower() or "read" in root_content.lower()
+    
+    # Content check
+    section_content = (tmp_path / ".claude" / "root_context.md").read_text(encoding="utf-8")
+    assert "<root_context>" in section_content
+    assert "# Global Context" in section_content
 
 
-def test_gemini_contains_preamble(tmp_path):
+def test_gemini_filemap_and_content(tmp_path):
     AgentTranslator(tmp_path).generate_files(["GEMINI"], COMPILED)
-    content = (tmp_path / "GEMINI.md").read_text(encoding="utf-8")
-    assert "You are a Gemini CLI agent" in content
-    assert "## Root Context" in content
+    
+    # Filemap check
+    root_content = (tmp_path / "GEMINI.md").read_text(encoding="utf-8")
+    assert ".gemini/root_context.md" in root_content
+    
+    # Content check
+    section_content = (tmp_path / ".gemini" / "root_context.md").read_text(encoding="utf-8")
+    assert "You are a Gemini CLI agent" in section_content
+    assert "## Root Context" in section_content
 
 
-def test_codex_is_clean_markdown(tmp_path):
+def test_codex_filemap_and_content(tmp_path):
     AgentTranslator(tmp_path).generate_files(["CODEX"], COMPILED)
-    content = (tmp_path / "CODEX.md").read_text(encoding="utf-8")
-    assert "<!-- b1CodingTool" not in content
-    assert "# Global Context" in content
+    
+    # Filemap check
+    root_content = (tmp_path / "CODEX.md").read_text(encoding="utf-8")
+    assert ".codex/root_context.md" in root_content
+    
+    # Content check
+    section_content = (tmp_path / ".codex" / "root_context.md").read_text(encoding="utf-8")
+    assert "<!-- b1CodingTool" not in section_content
+    assert "# Global Context" in section_content
