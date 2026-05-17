@@ -15,3 +15,6 @@
 - **Prefer `final`:** Use `final` for variables that aren't reassigned.
 - **Arrow Syntax:** Use `=>` for single-line functions or getters.
 - **Strings:** Use adjacent string literals for concatenation, not `+`.
+
+## Linting
+- **Standard:** Standardize on `package:lints/recommended.yaml`.
