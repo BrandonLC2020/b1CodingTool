@@ -7,7 +7,7 @@
 ## Framework (package:test)
 - **Grouping:** Use `group()` to organize related tests.
 - **Assertions:** Use `expect(actual, matcher)`.
-- **Async:** Use `testWidgets` for UI or `test(...) async` for logic.
+- **Async:** Use `test(...) async` for logic and stream verification.
 
 ## Mocking
 - **Preferred:** Use `mocktail` for type-safe mocking without code generation.
