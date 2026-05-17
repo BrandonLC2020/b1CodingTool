@@ -150,7 +150,10 @@ class AgentTranslator:
     def _format_section(self, agent: str, name: str, body: str) -> str:
         """Formats a single section based on the target agent."""
         if agent == "CLAUDE":
-            tag_name = self._safe_filename(name)
+            if "[dart]" in name.lower():
+                tag_name = "dart_context"
+            else:
+                tag_name = self._safe_filename(name)
             return f"<{tag_name}>\n{body}\n</{tag_name}>"
             
         elif agent == "GEMINI":
