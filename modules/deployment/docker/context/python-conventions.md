@@ -5,8 +5,14 @@
 
 ## Dependency Management
 - **UV:** Prefer `uv` for fast dependency installation.
-- **Layer Caching:** Copy requirements files and install dependencies before copying the rest of the application code.
+  - **Source:** Use `COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv` to get the binary.
+  - **Environment:** Set `UV_COMPILE_BYTECODE=1` for faster startup.
+  - **Workflow:** Use `uv sync` to manage a virtual environment (`.venv`) in the builder stage.
+- **Layer Caching:** 
+  - Copy `pyproject.toml` and `uv.lock` before application code.
+  - Use `--mount=type=cache,target=/root/.cache/uv` to speed up repeated installs.
 
 ## Production Servers
 - **Django:** Use `gunicorn` or `uvicorn` (with gunicorn worker).
 - **FastAPI:** Use `uvicorn`.
+- **Runtime:** Only copy the `.venv` and application code to the final stage using `COPY --chown`.
