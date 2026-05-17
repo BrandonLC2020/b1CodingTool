@@ -1,0 +1,13 @@
+name: dart
+version: 1.0.0
+type: development
+description: "Core Dart language standards, sound null-safety, and modern pub ecosystem guidelines."
+skills:
+  - name: "Dart Test Generator"
+    description: "Automated generation of package:test suites for Dart classes and functions."
+  - name: "Pub Dependency Manager"
+    description: "Assists in adding, removing, and upgrading dependencies via pub.dev."
+  - name: "Sealed Class Refactor"
+    description: "Refactor class hierarchies to use Dart 3+ sealed classes for exhaustive switching."
+hooks:
+  post-install: "scripts/post-install.sh"
