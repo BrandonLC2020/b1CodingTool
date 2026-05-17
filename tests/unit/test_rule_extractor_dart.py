@@ -42,3 +42,16 @@ def test_extract_indented_dart_blocks():
     rules = RuleExtractor().extract(content)
     assert len(rules) == 1
     assert "Nested rule." in rules[0]
+
+def test_extract_docstring_learning():
+    content = """
+    /// @b1-learning
+    /// Always use final for local variables.
+    /// This ensures immutability.
+    void myFunc() {}
+    """
+    rules = RuleExtractor().extract(content)
+    assert len(rules) == 1
+    assert "Always use final for local variables." in rules[0]
+    assert "This ensures immutability." in rules[0]
+    assert "@b1-learning" not in rules[0]
