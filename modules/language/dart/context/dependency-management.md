@@ -12,3 +12,10 @@
 - `dart pub get`: Fetch dependencies.
 - `dart pub upgrade`: Upgrade dependencies to latest within constraints.
 - `dart pub outdated`: Check for updateable packages.
+
+## Package Evaluation
+Before adding a third-party dependency, evaluate it against:
+- **Pub Points:** Prefer packages with 100+ points.
+- **Popularity:** Look for high usage and active maintenance (commits in last 6 months).
+- **Publisher:** Favor `dart.dev` or `flutter.dev` verified publishers.
+- **License:** Ensure it uses a permissive license (e.g., MIT, BSD, Apache 2.0).
