@@ -11,6 +11,12 @@ class RuleExtractor:
         r"<!-- b1:generalized:start -->\s*(.*?)\s*<!-- b1:generalized:end -->", 
         re.DOTALL
     )
+
+    # Matches blocks between // b1:generalized:start and // b1:generalized:end
+    DART_MARKER_REGEX = re.compile(
+        r"//\s*b1:generalized:start\s*(.*?)\s*//\s*b1:generalized:end",
+        re.DOTALL
+    )
     
     # Fallback: Matches sections under "## Generalized Learnings" until the next "## " header
     FALLBACK_HEADER = "## Generalized Learnings"
@@ -21,13 +27,24 @@ class RuleExtractor:
         """
         rules = []
         
-        # 1. Try markers
+        # 1. Try HTML-style markers
         matches = self.MARKER_REGEX.findall(content)
         if matches:
             rules.extend([m.strip() for m in matches])
+            
+        # 2. Try Dart-style markers
+        dart_matches = self.DART_MARKER_REGEX.findall(content)
+        if dart_matches:
+            for match in dart_matches:
+                # Clean up "// " from each line in the match
+                lines = match.strip().splitlines()
+                cleaned_lines = [re.sub(r"^\s*//\s*", "", line) for line in lines]
+                rules.append("\n".join(cleaned_lines).strip())
+
+        if rules:
             return rules
             
-        # 2. Try fallback header
+        # 3. Try fallback header
         if self.FALLBACK_HEADER in content:
             # Find the section starting with FALLBACK_HEADER
             start_index = content.find(self.FALLBACK_HEADER)
