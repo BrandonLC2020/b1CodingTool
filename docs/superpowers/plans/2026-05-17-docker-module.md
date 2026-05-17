@@ -157,25 +157,41 @@ git commit -m "feat(docker): add modular compose templates"
 # Stage 1: Builder
 FROM python:3.12-slim AS builder
 
+# Install uv binary from official image
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+# Set environment variables for uv
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+
 WORKDIR /app
+
+# Install dependencies first for better caching
 COPY pyproject.toml uv.lock ./
-RUN pip install uv && uv export --no-dev --format requirements-txt > requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-install-project
 
 # Stage 2: Runtime
 FROM python:3.12-slim
 
-WORKDIR /app
+# Create a non-privileged user
 RUN groupadd -g 999 python && \
     useradd -r -u 999 -g python python
-    
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
-COPY . .
 
-RUN chown -R python:python /app
+WORKDIR /app
+
+# Copy the virtual environment from the builder
+COPY --from=builder --chown=python:python /app/.venv /app/.venv
+
+# Add virtual environment to PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Copy application code with correct ownership
+COPY --chown=python:python . .
+
 USER python
 
+# Default command (can be overridden)
 CMD ["python", "main.py"]
 ```
 
@@ -187,7 +203,7 @@ git commit -m "feat(docker): add multi-stage python dockerfile template"
 
 ---
 
-### Task 3: The /docker init Skill
+### Task 5: The /docker init Skill
 
 **Files:**
 - Create: `modules/deployment/docker/skills/docker-init.md`
@@ -217,33 +233,38 @@ git commit -m "feat(docker): add /docker init skill"
 
 ---
 
-### Task 4: Integration Test for Rule Extraction
+### Task 6: Integration Test for Context Compilation
 
 **Files:**
-- Create: `tests/unit/test_rule_extractor_docker.py`
+- Create: `tests/unit/test_docker_context.py`
 
-- [ ] **Step 1: Write test to verify Docker rules are extracted**
+- [ ] **Step 1: Write test to verify Docker context is compiled**
 ```python
 import pytest
-from b1.core.compiler import RuleExtractor
+from b1.core.compiler import ContextCompiler
 from pathlib import Path
 
-def test_docker_rule_extraction(tmp_path):
-    docker_context = tmp_path / "modules/deployment/docker/context"
-    docker_context.mkdir(parents=True)
-    (docker_context / "best-practices.md").write_text("# Docker: Best Practices\n- Use Compose")
+def test_docker_context_compilation(tmp_path):
+    # Setup a mock project structure
+    modules_dir = tmp_path / ".agent" / "modules" / "docker" / "context"
+    modules_dir.mkdir(parents=True)
+    (modules_dir / "best-practices.md").write_text("# Docker: Best Practices\n- Use Compose", encoding="utf-8")
     
-    extractor = RuleExtractor(tmp_path)
-    rules = extractor.extract_rules()
+    # Compile context
+    compiler = ContextCompiler(tmp_path)
+    result = compiler.compile()
     
-    assert any("Docker: Best Practices" in r.content for r in rules)
+    # Verify the context was included
+    assert "Docker: Best Practices" in result
+    assert "<!-- b1CodingTool: Module Context [docker] - best-practices.md -->" in result
 ```
 
 - [ ] **Step 2: Run test**
-Run: `pytest tests/unit/test_rule_extractor_docker.py`
+Run: `pytest tests/unit/test_docker_context.py`
 
 - [ ] **Step 3: Commit**
 ```bash
-git add tests/unit/test_rule_extractor_docker.py
-git commit -m "test(docker): add integration test for rule extraction"
+git add tests/unit/test_docker_context.py
+git commit -m "test(docker): add integration test for context compilation"
 ```
+
