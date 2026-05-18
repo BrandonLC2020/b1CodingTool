@@ -7,6 +7,8 @@ skills:
     description: "Assists in auditing CloudFormation or Terraform templates for security best practices."
   - name: "Serverless Config Generator"
     description: "Helps generate serverless.yml or SAM templates for AWS Lambda deployments."
+  - name: "Reverse Proxy Configurator"
+    description: "Helps generate Nginx or ALB configuration files for reverse proxying and security."
 commands:
   - name: "/aws audit"
     description: "Trigger a security audit of the infrastructure/ directory"
@@ -14,5 +16,7 @@ commands:
     description: "Generate a boilerplate AWS Lambda function and SAM template"
   - name: "/aws cost-check"
     description: "Provide advice on cost-saving measures based on the resource definitions"
+  - name: "/aws proxy-init"
+    description: "Generate a reverse proxy configuration (Nginx or ALB) for your deployment"
 hooks:
   post-install: "scripts/post-install.sh"
