@@ -59,6 +59,16 @@ def get_user(db: Session, user_id: int):
     return db.query(User).filter(User.id == user_id).first()
 ```
 
+- **Database Indexes:** Proactively add indexes to columns frequently queried or sorted.
+  - Use `index=True` in `mapped_column()` for single-column indexes (e.g., `email: Mapped[str] = mapped_column(String, index=True)`).
+  - Use the `Index` construct inside `__table_args__` for composite indexes or advanced indexing configurations:
+    ```python
+    __table_args__ = (
+        Index("ix_user_status_created", "status", "created_at"),
+    )
+    ```
+  - Rely on `unique=True` for constraints, as it automatically creates a unique index.
+
 ## Pydantic v2 Schemas
 - Use Pydantic models as request/response schemas — never pass raw dicts across the API boundary.
 - Separate schemas by intent: `UserCreate` (input), `UserResponse` (output), `UserUpdate` (partial input). Don't reuse one schema for all three.
