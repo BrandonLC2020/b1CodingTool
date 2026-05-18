@@ -29,6 +29,12 @@ def transfer_credits(sender: User, recipient: User, amount: int) -> None:
     recipient.save(update_fields=["credits"])
 ```
 
+- **Database Indexes:** Always evaluate query patterns and add indexes for performance.
+  - Use `db_index=True` on fields that are frequently used in `.filter()`, `.exclude()`, or `order_by()`.
+  - Use `class Meta: indexes = [...]` for composite indexes (filtering on multiple columns together) or when using specific index types (e.g., `GinIndex`, `BrinIndex`).
+  - Avoid creating indexes on low-cardinality fields (like `BooleanField`) unless the data is highly skewed.
+  - Remember that `unique=True` and `ForeignKey` automatically create an index.
+
 ## Views
 - Use **Class-Based Views** for standard CRUD operations — they reduce boilerplate and are easily extended.
 - Use **Function-Based Views** for simple, one-off endpoints or when CBV mixins make the code harder to follow.
