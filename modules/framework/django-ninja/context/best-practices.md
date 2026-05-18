@@ -17,3 +17,4 @@
 ## Performance
 - **Select/Prefetch Related:** Always use `select_related` and `prefetch_related` in ORM queries to avoid N+1 issues in API responses.
 - **Pagination:** Use Django Ninja's pagination support for endpoints that return lists of objects.
+- **Database Indexing:** Ensure underlying Django models are properly indexed (`db_index=True` or `Meta.indexes`) for fields frequently used in API filtering, sorting, or lookups to maintain fast response times.
