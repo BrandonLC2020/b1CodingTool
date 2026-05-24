@@ -16,5 +16,5 @@ class ValidationError(B1Error):
     pass
 
 class ProjectError(B1Error):
-    """Raised when there's an issue with the project structure (e.g. missing .agent)."""
+    """Raised when there's an issue with the project structure (e.g. missing .agents)."""
     pass

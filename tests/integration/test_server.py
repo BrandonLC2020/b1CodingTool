@@ -65,7 +65,7 @@ def test_init_project_creates_agent_dir(tmp_path, monkeypatch):
     with TestClient(app) as client:
         resp = client.post("/api/project/init")
     assert resp.status_code == 200
-    assert (tmp_path / ".agent").exists()
+    assert (tmp_path / ".agents").exists()
 
 
 def test_update_config_saves_to_file(client, cd_project):
@@ -91,7 +91,7 @@ def test_install_module_fetches_and_installs(client, cd_project, tmp_path):
     
     resp = client.post("/api/modules/install", json={"source": str(source)})
     assert resp.status_code == 200
-    assert (cd_project / ".agent" / "modules" / "my-mod").exists()
+    assert (cd_project / ".agents" / "modules" / "my-mod").exists()
 
 
 def test_pair_context_generates_agent_files(client, cd_project):
@@ -107,7 +107,7 @@ def test_pair_context_generates_agent_files(client, cd_project):
 def test_pair_context_updates_active_agents_if_provided(client, cd_project):
     resp = client.post("/api/context/pair", json={"agents": ["CODEX"]})
     assert resp.status_code == 200
-    assert (cd_project / "CODEX.md").exists()
+    assert (cd_project / "AGENTS.md").exists()
     
     # Verify config was updated
     resp_config = client.get("/api/config")

@@ -14,7 +14,7 @@ class B1Config(BaseModel):
     
     @classmethod
     def load(cls, project_dir: Path) -> "B1Config":
-        config_path = project_dir / ".agent" / "config.yaml"
+        config_path = project_dir / ".agents" / "config.yaml"
         if not config_path.exists():
             return cls()
             
@@ -23,7 +23,7 @@ class B1Config(BaseModel):
             return cls(**(data or {}))
             
     def save(self, project_dir: Path):
-        config_path = project_dir / ".agent" / "config.yaml"
+        config_path = project_dir / ".agents" / "config.yaml"
         config_path.parent.mkdir(parents=True, exist_ok=True)
         with open(config_path, "w", encoding="utf-8") as f:
             yaml.safe_dump(self.model_dump(), f)

@@ -13,7 +13,7 @@ console = Console()
 class ModuleInstaller:
     def __init__(self, target_project_dir: Path):
         self.project_dir = target_project_dir
-        self.modules_dir = self.project_dir / ".agent" / "modules"
+        self.modules_dir = self.project_dir / ".agents" / "modules"
         self.modules_dir.mkdir(parents=True, exist_ok=True)
         self.hook_engine = HookEngine(self.project_dir)
         

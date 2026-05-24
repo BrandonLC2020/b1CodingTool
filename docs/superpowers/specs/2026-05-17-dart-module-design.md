@@ -49,7 +49,7 @@ modules/language/dart/
 - **Docstring Harvesting:** Recognition of `/// @b1-learning` patterns in triple-slash documentation.
 
 ### 3.2 Agent Translation (`src/b1/core/translator.py`)
-- **Syntax Awareness:** Map `.dart` extensions to `dart` syntax highlighting in all generated agent files (`CLAUDE.md`, `GEMINI.md`, `CODEX.md`).
+- **Syntax Awareness:** Map `.dart` extensions to `dart` syntax highlighting in all generated agent files (`CLAUDE.md`, `GEMINI.md`, `AGENTS.md`).
 - **Claude-Specific Formatting:** Wrap Dart context in `<dart_context>` tags for improved agent focus.
 
 ## 4. Knowledge Base Content

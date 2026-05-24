@@ -5,7 +5,7 @@ from b1.core.scaffolder import scaffold_project
 
 def test_creates_agent_directory(tmp_path):
     scaffold_project(tmp_path)
-    assert (tmp_path / ".agent").is_dir()
+    assert (tmp_path / ".agents").is_dir()
 
 
 def test_creates_docs_directory(tmp_path):
@@ -45,4 +45,4 @@ def test_is_idempotent_does_not_overwrite_existing_readme(tmp_path):
 def test_safe_to_call_twice(tmp_path):
     scaffold_project(tmp_path)
     scaffold_project(tmp_path)  # should not raise
-    assert (tmp_path / ".agent").is_dir()
+    assert (tmp_path / ".agents").is_dir()

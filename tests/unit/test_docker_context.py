@@ -4,7 +4,7 @@ from pathlib import Path
 
 def test_docker_context_compilation(tmp_path):
     # Setup a mock project structure
-    modules_dir = tmp_path / ".agent" / "modules" / "docker" / "context"
+    modules_dir = tmp_path / ".agents" / "modules" / "docker" / "context"
     modules_dir.mkdir(parents=True)
     (modules_dir / "best-practices.md").write_text("# Docker: Best Practices\n- Use Compose", encoding="utf-8")
     

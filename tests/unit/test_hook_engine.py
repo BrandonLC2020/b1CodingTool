@@ -24,7 +24,7 @@ def _make_module_with_hook(modules_dir: Path, name: str, hook_name: str, hook_cm
 
 def test_hook_engine_runs_scripts(tmp_path):
     project = tmp_path / "project"
-    modules_dir = project / ".agent" / "modules"
+    modules_dir = project / ".agents" / "modules"
     modules_dir.mkdir(parents=True)
     
     _make_module_with_hook(modules_dir, "test-mod", "pre-pair", "pre-pair.sh")
@@ -42,7 +42,7 @@ def test_hook_engine_runs_scripts(tmp_path):
 
 def test_hook_engine_runs_shell_fallback(tmp_path):
     project = tmp_path / "project"
-    modules_dir = project / ".agent" / "modules"
+    modules_dir = project / ".agents" / "modules"
     modules_dir.mkdir(parents=True)
     
     # Hook command that is NOT a file
@@ -69,7 +69,7 @@ def test_hook_engine_runs_shell_fallback(tmp_path):
 
 def test_hook_engine_skips_missing_hook(tmp_path):
     project = tmp_path / "project"
-    modules_dir = project / ".agent" / "modules"
+    modules_dir = project / ".agents" / "modules"
     modules_dir.mkdir(parents=True)
     
     _make_module_with_hook(modules_dir, "test-mod", "pre-pair", "pre-pair.sh")

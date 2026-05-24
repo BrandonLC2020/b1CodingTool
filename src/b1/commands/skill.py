@@ -68,7 +68,7 @@ def skill_install(
     Installs a community skill from skillsmp.com into the current project.
     """
     project_dir = Path.cwd()
-    if not (project_dir / ".agent").exists():
+    if not (project_dir / ".agents").exists():
         raise ProjectError(
             "Not a b1CodingTool project.",
             suggestions=["Run `b1 init` to bootstrap the project structure."]

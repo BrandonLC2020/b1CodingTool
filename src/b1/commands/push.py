@@ -16,7 +16,7 @@ def push_cmd():
     Scans project-specific agent files and drafts a Pull Request to upstream.
     """
     project_dir = Path.cwd()
-    if not (project_dir / ".agent").exists():
+    if not (project_dir / ".agents").exists():
         console.print("[bold red]Project not initialized. Run b1 init.[/bold red]")
         raise typer.Exit(1)
         
@@ -27,7 +27,7 @@ def push_cmd():
         repo = typer.prompt("No upstream repository configured. Enter the upstream GitHub repo (e.g. org/repo)")
         config.upstream_repo = repo
         config.save(project_dir)
-        console.print(f"[green]Saved upstream config to .agent/config.yaml[/green]")
+        console.print(f"[green]Saved upstream config to .agents/config.yaml[/green]")
         
     if not shutil.which("gh"):
         console.print("[bold red]GitHub CLI (gh) is not installed. Please install it to use b1 push.[/bold red]")
@@ -39,7 +39,7 @@ def push_cmd():
         
     # 2. Intelligent Scanning and Rule Extraction
     extractor = RuleExtractor()
-    project_agent_path = project_dir / ".agent" / "project" / "agent.md"
+    project_agent_path = project_dir / ".agents" / "project" / "agents.md"
     extracted_content = ""
     rules_count = 0
     
@@ -49,10 +49,10 @@ def push_cmd():
             extracted_content = "\n\n".join(rules)
             rules_count = len(rules)
             
-    learnings_path = project_dir / ".agent" / "learnings.md"
+    learnings_path = project_dir / ".agents" / "learnings.md"
     if extracted_content:
         learnings_path.write_text(f"# Generalized Learnings\n\nExtracted from project context.\n\n{extracted_content}\n", encoding="utf-8")
-        console.print(f"[green]Extracted {rules_count} generalized rules to .agent/learnings.md[/green]")
+        console.print(f"[green]Extracted {rules_count} generalized rules to .agents/learnings.md[/green]")
     else:
         if learnings_path.exists():
             learnings_path.unlink()
@@ -65,15 +65,15 @@ def push_cmd():
         # 2. Selective Staging
         staged_any = False
         
-        # Always check root agent.md as it's project-agnostic
-        root_agent = project_dir / "agent.md"
+        # Always check root agents.md as it's project-agnostic
+        root_agent = project_dir / "agents.md"
         if root_agent.exists():
-            subprocess.run(["git", "add", "agent.md"], check=False, capture_output=True)
+            subprocess.run(["git", "add", "agents.md"], check=False, capture_output=True)
             staged_any = True
             
         # Stage only the extracted learnings
         if learnings_path.exists():
-            subprocess.run(["git", "add", ".agent/learnings.md"], check=True, capture_output=True)
+            subprocess.run(["git", "add", ".agents/learnings.md"], check=True, capture_output=True)
             staged_any = True
             
         if not staged_any:

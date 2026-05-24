@@ -207,7 +207,7 @@ runner = CliRunner()
 - Module context files preserved after install
 
 ### `test_pair_cmd.py`
-- `CLAUDE.md`, `GEMINI.md`, `CODEX.md` written to project root
+- `CLAUDE.md`, `GEMINI.md`, `AGENTS.md` written to project root
 - Content includes root `agent.md`, project `agent.md`, and installed module context
 - Running outside initialized project exits with error
 - Re-running after adding a module updates the output files

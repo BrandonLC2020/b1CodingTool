@@ -14,7 +14,7 @@ class ContextCompiler:
         
     def compile(self) -> str:
         """
-        Gathers content from the root agent.md, project-specific agent.md, 
+        Gathers content from the root agents.md, project-specific agents.md, 
         and module context files to form a unified document.
         """
         combined = []
@@ -28,22 +28,22 @@ class ContextCompiler:
                 combined.append(f"- Default Branch: {self.config.default_branch}\n")
             combined.append("\n\n")
 
-        # 1. Root agent.md
-        root_agent = self.project_dir / "agent.md"
+        # 1. Root agents.md
+        root_agent = self.project_dir / "agents.md"
         if root_agent.exists():
-            combined.append("<!-- b1CodingTool: Root Context -->\\n")
+            combined.append("<!-- b1CodingTool: Root Context -->\n")
             combined.append(root_agent.read_text(encoding="utf-8").strip())
-            combined.append("\\n\\n")
+            combined.append("\n\n")
             
-        # 2. Project-specific agent.md
-        project_agent = self.project_dir / ".agent" / "project" / "agent.md"
+        # 2. Project-specific agents.md
+        project_agent = self.project_dir / ".agents" / "project" / "agents.md"
         if project_agent.exists():
-            combined.append("<!-- b1CodingTool: Project Context -->\\n")
+            combined.append("<!-- b1CodingTool: Project Context -->\n")
             combined.append(project_agent.read_text(encoding="utf-8").strip())
-            combined.append("\\n\\n")
+            combined.append("\n\n")
             
         # 3. Installed modules' context folder
-        modules_dir = self.project_dir / ".agent" / "modules"
+        modules_dir = self.project_dir / ".agents" / "modules"
         if modules_dir.exists():
             for mod in [d for d in modules_dir.iterdir() if d.is_dir()]:
                 # 3a. Add module capabilities (skills and commands)

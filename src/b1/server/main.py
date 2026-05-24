@@ -66,7 +66,7 @@ def get_project_info():
     return {
         "name": project_dir.name,
         "path": str(project_dir),
-        "initialized": (project_dir / ".agent").exists()
+        "initialized": (project_dir / ".agents").exists()
     }
 
 @app.post("/api/project/init")
@@ -98,7 +98,7 @@ def update_config(req: ConfigUpdateRequest):
 @app.get("/api/modules")
 def get_modules():
     project_dir = Path.cwd()
-    modules_dir = project_dir / ".agent" / "modules"
+    modules_dir = project_dir / ".agents" / "modules"
     if not modules_dir.exists():
         return []
     
@@ -115,7 +115,7 @@ def get_modules():
 @app.post("/api/modules/install")
 def install_module(req: InstallRequest):
     project_dir = Path.cwd()
-    if not (project_dir / ".agent").exists():
+    if not (project_dir / ".agents").exists():
         raise ProjectError("Project not initialized. Run init first.")
         
     fetcher = ModuleFetcher()
@@ -129,7 +129,7 @@ def install_module(req: InstallRequest):
 @app.get("/api/context")
 def get_compiled_context():
     project_dir = Path.cwd()
-    if not (project_dir / ".agent").exists():
+    if not (project_dir / ".agents").exists():
         raise HTTPException(status_code=400, detail="Project not initialized")
     
     config = B1Config.load(project_dir)
@@ -139,7 +139,7 @@ def get_compiled_context():
 @app.post("/api/context/pair")
 def pair_context(req: Optional[PairRequest] = None):
     project_dir = Path.cwd()
-    if not (project_dir / ".agent").exists():
+    if not (project_dir / ".agents").exists():
         raise ProjectError("Project not initialized.")
         
     config = B1Config.load(project_dir)

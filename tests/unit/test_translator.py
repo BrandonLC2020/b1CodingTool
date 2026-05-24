@@ -25,7 +25,7 @@ def test_generates_filemap_and_hidden_dirs(tmp_path):
     # Root filemaps should exist
     assert (tmp_path / "CLAUDE.md").exists()
     assert (tmp_path / "GEMINI.md").exists()
-    assert (tmp_path / "CODEX.md").exists()
+    assert (tmp_path / "AGENTS.md").exists()
     
     # Hidden dirs should exist
     assert (tmp_path / ".claude" / "context").is_dir()
@@ -91,9 +91,11 @@ def test_codex_filemap_and_content(tmp_path):
     AgentTranslator(tmp_path).generate_files(["CODEX"], COMPILED)
     
     # Filemap check
-    root_content = (tmp_path / "CODEX.md").read_text(encoding="utf-8")
+    root_content = (tmp_path / "AGENTS.md").read_text(encoding="utf-8")
     assert ".codex/context/root_context.md" in root_content
     assert ".codex/context/project_context.md" in root_content
+    assert "<!-- b1CodingTool: start -->" in root_content
+    assert "<!-- b1CodingTool: end -->" in root_content
     
     # Content check
     section_content = (tmp_path / ".codex" / "context" / "root_context.md").read_text(encoding="utf-8")
@@ -122,3 +124,29 @@ def test_gitignore_creates_if_not_exists(tmp_path):
     content = gitignore.read_text(encoding="utf-8")
     assert "CLAUDE.md" in content
     assert ".claude/" in content
+
+def test_agents_merge_behavior(tmp_path):
+    # Pre-create AGENTS.md with user content
+    agents_file = tmp_path / "AGENTS.md"
+    user_header = "# Custom User Guidelines\nDo not violate the rules.\n"
+    agents_file.write_text(user_header, encoding="utf-8")
+    
+    translator = AgentTranslator(tmp_path)
+    translator.generate_files(["CODEX"], COMPILED)
+    
+    # Verify it merged (kept user content, appended generated block with markers)
+    content = agents_file.read_text(encoding="utf-8")
+    assert content.startswith(user_header)
+    assert "<!-- b1CodingTool: start -->" in content
+    assert "<!-- b1CodingTool: end -->" in content
+    assert ".codex/context/root_context.md" in content
+    
+    # Now run it again with a slightly different compiled context to test updating
+    compiled_modified = COMPILED + "\n<!-- b1CodingTool: Project Context -->\nModified project text."
+    translator.generate_files(["CODEX"], compiled_modified)
+    
+    content_updated = agents_file.read_text(encoding="utf-8")
+    assert content_updated.startswith(user_header)
+    assert "<!-- b1CodingTool: start -->" in content_updated
+    assert "<!-- b1CodingTool: end -->" in content_updated
+    assert ".codex/context/root_context.md" in content_updated

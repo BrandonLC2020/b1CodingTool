@@ -32,8 +32,8 @@ def _init_git_repo(path: Path):
 def test_push_creates_branch_and_stages_agent_dir(tmp_path, monkeypatch, make_project):
     project = make_project(upstream_repo="org/repo")
     _init_git_repo(project)
-    # Add a new file to .agent/ AFTER the initial commit so there are staged changes
-    (project / ".agent" / "project" / "new-context.md").write_text("# New Context\n", encoding="utf-8")
+    # Add a new file to .agents/ AFTER the initial commit so there are staged changes
+    (project / ".agents" / "project" / "new-context.md").write_text("# New Context\n", encoding="utf-8")
     monkeypatch.chdir(project)
 
     def selective_run(cmd, *args, **kwargs):

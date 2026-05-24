@@ -11,19 +11,19 @@ def test_pair_writes_agent_files(cd_project):
     assert result.exit_code == 0
     assert (cd_project / "CLAUDE.md").exists()
     assert (cd_project / "GEMINI.md").exists()
-    assert (cd_project / "CODEX.md").exists()
+    assert (cd_project / "AGENTS.md").exists()
 
 
 def test_pair_content_includes_root_context(cd_project):
     runner.invoke(app, ["pair"])
-    content = (cd_project / "CLAUDE.md").read_text(encoding="utf-8")
+    content = (cd_project / ".claude" / "context" / "root_context.md").read_text(encoding="utf-8")
     assert "Global Context" in content
 
 
 def test_pair_content_includes_project_context(cd_project):
     runner.invoke(app, ["pair"])
-    content = (cd_project / "CLAUDE.md").read_text(encoding="utf-8")
-    assert "Project Context" in content
+    content = (cd_project / ".claude" / "context" / "project_context.md").read_text(encoding="utf-8")
+    assert "Project-specific context" in content
 
 
 def test_pair_content_includes_installed_module_context(make_project, make_module, monkeypatch):
@@ -37,7 +37,7 @@ def test_pair_content_includes_installed_module_context(make_project, make_modul
         runner.invoke(app, ["install", str(module)])
 
     runner.invoke(app, ["pair"])
-    content = (project / "CLAUDE.md").read_text(encoding="utf-8")
+    content = (project / ".claude" / "context" / "django" / "best-practices.md").read_text(encoding="utf-8")
     assert "Django best practices" in content
 
 

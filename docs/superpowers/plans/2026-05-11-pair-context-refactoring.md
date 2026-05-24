@@ -85,7 +85,7 @@ def test_codex_filemap_and_content(tmp_path):
     AgentTranslator(tmp_path).generate_files(["CODEX"], COMPILED)
     
     # Filemap check
-    root_content = (tmp_path / "CODEX.md").read_text(encoding="utf-8")
+    root_content = (tmp_path / "AGENTS.md").read_text(encoding="utf-8")
     assert ".codex/root_context.md" in root_content
     
     # Content check

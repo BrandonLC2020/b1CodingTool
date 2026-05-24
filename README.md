@@ -1,14 +1,14 @@
 # b1CodingTool
 
-**b1CodingTool** is an agent-agnostic development environment manager. It standardizes AI coding assistant workflows by organizing project context and guidelines into installable **modules**, then compiling them into the configuration files each assistant expects (`CLAUDE.md`, `GEMINI.md`, `CODEX.md`).
+**b1CodingTool** is an agent-agnostic development environment manager. It standardizes AI coding assistant workflows by organizing project context and guidelines into installable **modules**, then compiling them into the configuration files each assistant expects (`CLAUDE.md`, `GEMINI.md`, `AGENTS.md`).
 
 ## How it works
 
-1. **`b1 init`** — scaffolds an `.agent/` directory in your project with a layered `agent.md` hierarchy.
-2. **`b1 install <module>`** — installs a module (local path or git URL), injecting its context docs and skills into `.agent/`.
-3. **`b1 pair`** — compiles the full `agent.md` hierarchy and writes identical content to `CLAUDE.md`, `GEMINI.md`, and `CODEX.md`.
+1. **`b1 init`** — scaffolds an `.agents/` directory in your project with a layered `agents.md` hierarchy.
+2. **`b1 install <module>`** — installs a module (local path or git URL), injecting its context docs and skills into `.agents/`.
+3. **`b1 pair`** — compiles the full `agents.md` hierarchy and writes identical content to `CLAUDE.md`, `GEMINI.md`, and `AGENTS.md`.
 
-> **Note:** `CLAUDE.md`, `GEMINI.md`, and `CODEX.md` are auto-generated. Edit `agent.md` or `.agent/project/agent.md` instead, then re-run `b1 pair`.
+> **Note:** `CLAUDE.md`, `GEMINI.md`, and `AGENTS.md` are auto-generated. Edit `agents.md` or `.agents/project/agents.md` instead, then re-run `b1 pair`.
 
 ## Installation
 
@@ -24,11 +24,11 @@ uv sync
 
 | Command | Description |
 |---------|-------------|
-| `uv run b1 init [path]` | Bootstrap a project with `.agent/` structure |
+| `uv run b1 init [path]` | Bootstrap a project with `.agents/` structure |
 | `uv run b1 install <source>` | Install a module (local path or git URL) |
 | `uv run b1 pull` | Sync modules from upstream repo |
 | `uv run b1 push` | Draft a PR to contribute generalized rules upstream |
-| `uv run b1 pair` | Regenerate `CLAUDE.md`, `GEMINI.md`, `CODEX.md` |
+| `uv run b1 pair` | Regenerate `CLAUDE.md`, `GEMINI.md`, `AGENTS.md` |
 | `uv run b1 dashboard` | Launch the React dashboard on localhost |
 
 ## Module system
@@ -72,16 +72,16 @@ uv run b1 install https://github.com/org/b1-modules#flutter
 ## Project structure
 
 ```
-.agent/
-├── agent.md              # Root context: project-agnostic practices
+.agents/
+├── agents.md              # Root context: project-agnostic practices
 ├── project/
-│   └── agent.md          # Project-specific context: app logic, tasks, decisions
+│   └── agents.md          # Project-specific context: app logic, tasks, decisions
 └── modules/
     └── flutter/          # Installed module files
         └── context/
 ```
 
-The `ContextCompiler` assembles these in order — root `agent.md` → project `agent.md` → installed module context files — and `b1 pair` writes the result to all agent-specific files.
+The `ContextCompiler` assembles these in order — root `agents.md` → project `agents.md` → installed module context files — and `b1 pair` writes the result to all agent-specific files.
 
 ## Architecture
 
@@ -90,14 +90,14 @@ src/b1/
   cli.py               # Typer entry point — registers all commands
   commands/            # One file per CLI command
   core/
-    compiler.py        # Compiles agent.md hierarchy into a single string
-    translator.py      # Writes compiled string to CLAUDE.md, GEMINI.md, CODEX.md
-    context_manager.py # Scaffolds agent.md files on b1 init
-    installer.py       # Copies module files into .agent/modules/
+    compiler.py        # Compiles agents.md hierarchy into a single string
+    translator.py      # Writes compiled string to CLAUDE.md, GEMINI.md, AGENTS.md
+    context_manager.py # Scaffolds agents.md files on b1 init
+    installer.py       # Copies module files into .agents/modules/
     fetcher.py         # Resolves module source: local path or git clone
-    scaffolder.py      # Scaffolds .agent/ directory structure
+    scaffolder.py      # Scaffolds .agents/ directory structure
     schema.py          # Pydantic models: ModuleConfig, SkillConfig
-    config.py          # Reads/writes .agent/config.yaml
+    config.py          # Reads/writes .agents/config.yaml
   server/main.py       # FastAPI server for the React dashboard
 dashboard/             # React frontend (Vite + TypeScript)
 modules/               # Built-in module library

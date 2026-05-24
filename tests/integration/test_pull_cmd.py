@@ -16,7 +16,7 @@ def test_pull_exits_zero_with_no_modules_installed(make_project, monkeypatch):
 
 def test_pull_exits_zero_when_modules_dir_missing(tmp_path, monkeypatch):
     # Initialized project but no modules dir at all
-    (tmp_path / ".agent").mkdir()
+    (tmp_path / ".agents").mkdir()
     monkeypatch.chdir(tmp_path)
     result = runner.invoke(app, ["pull"])
     assert result.exit_code == 0

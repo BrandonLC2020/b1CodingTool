@@ -1177,7 +1177,7 @@ def test_pair_writes_agent_files(cd_project):
     assert result.exit_code == 0
     assert (cd_project / "CLAUDE.md").exists()
     assert (cd_project / "GEMINI.md").exists()
-    assert (cd_project / "CODEX.md").exists()
+    assert (cd_project / "AGENTS.md").exists()
 
 
 def test_pair_content_includes_root_context(cd_project):

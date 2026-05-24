@@ -13,13 +13,13 @@ def pull_cmd():
     Syncs local modules with the upstream version control.
     """
     project_dir = Path.cwd()
-    if not (project_dir / ".agent").exists():
+    if not (project_dir / ".agents").exists():
         raise ProjectError(
             "Not a b1CodingTool project.",
             suggestions=["Run `b1 init` to bootstrap the project structure.", "Ensure you are in the project root directory."]
         )
 
-    modules_dir = project_dir / ".agent" / "modules"
+    modules_dir = project_dir / ".agents" / "modules"
     
     if not modules_dir.exists():
         console.print("[yellow]No modules currently installed in this project.[/yellow]")

@@ -1,7 +1,7 @@
 # B1 Pair Context Refactoring Design
 
 ## Summary
-The `b1 pair` command currently generates monolithic `CLAUDE.md`, `GEMINI.md`, and `CODEX.md` files containing the entirety of the root, project, and module contexts. This causes massive context bloat for the agents. This design shifts the output to generate lightweight root files acting as a "filemap", while generating per-agent formatted context files inside hidden folders (`.claude/`, `.gemini/`, `.codex/`).
+The `b1 pair` command currently generates monolithic `CLAUDE.md`, `GEMINI.md`, and `AGENTS.md` files containing the entirety of the root, project, and module contexts. This causes massive context bloat for the agents. This design shifts the output to generate lightweight root files acting as a "filemap", while generating per-agent formatted context files inside hidden folders (`.claude/`, `.gemini/`, `.codex/`).
 
 ## Architecture
 

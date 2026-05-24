@@ -1,7 +1,7 @@
 # b1CodingTool: Phase 4 Implementation Plan
 
 ## Goal Description
-Implement the `b1 pair` command. This command acts as a context compiler, traversing the hierarchical `b1CodingTool` architectures (root `agent.md`, project `agent.md`, and module contexts) to build and sync standard configuration files (`CLAUDE.md`, `GEMINI.md`, `CODEX.md`) that natively control differing assistant behaviors inside an IDE.
+Implement the `b1 pair` command. This command acts as a context compiler, traversing the hierarchical `b1CodingTool` architectures (root `agent.md`, project `agent.md`, and module contexts) to build and sync standard configuration files (`CLAUDE.md`, `GEMINI.md`, `AGENTS.md`) that natively control differing assistant behaviors inside an IDE.
 
 ## Important Notes & Review Needed
 > [!IMPORTANT]
@@ -9,7 +9,7 @@ Implement the `b1 pair` command. This command acts as a context compiler, traver
 > Should `b1 pair` simply stitch the `agent.md` texts together exactly as they are and copy them over, or should it wrap them in provider-specific xml tags? (For example, Claude loves `<system_instructions>` tags).
 >
 > **Which Agents**:
-> Currently, the spec mentions `CLAUDE.md`, `CODEX.md`, and `GEMINI.md`. Do you want it to output all three by default when `b1 pair` is run, or should the user configure which ones they want active?
+> Currently, the spec mentions `CLAUDE.md`, `AGENTS.md`, and `GEMINI.md`. Do you want it to output all three by default when `b1 pair` is run, or should the user configure which ones they want active?
 
 ---
 
@@ -27,7 +27,7 @@ Implement the `b1 pair` command. This command acts as a context compiler, traver
 #### [NEW] `src/b1/core/translator.py`
 - Contains mapping configurations for different providers natively supported by IDEs.
 - `translator.generate("CLAUDE", context_str)` -> Wraps context appropriately and writes to `CLAUDE.md` in the root.
-- Handles generation for `GEMINI.md` and `CODEX.md`.
+- Handles generation for `GEMINI.md` and `AGENTS.md`.
 
 ### Command Logic
 #### [NEW] `src/b1/commands/pair.py`

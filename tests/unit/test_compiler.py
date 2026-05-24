@@ -5,22 +5,22 @@ from b1.core.compiler import ContextCompiler
 
 def _scaffold(root: Path, root_md=None, project_md=None, modules=None):
     """Helper: builds a minimal project layout in root."""
-    (root / ".agent" / "project").mkdir(parents=True)
-    (root / ".agent" / "modules").mkdir(parents=True)
+    (root / ".agents" / "project").mkdir(parents=True)
+    (root / ".agents" / "modules").mkdir(parents=True)
     if root_md is not None:
-        (root / "agent.md").write_text(root_md, encoding="utf-8")
+        (root / "agents.md").write_text(root_md, encoding="utf-8")
     if project_md is not None:
-        (root / ".agent" / "project" / "agent.md").write_text(project_md, encoding="utf-8")
+        (root / ".agents" / "project" / "agents.md").write_text(project_md, encoding="utf-8")
     if modules:
         for name, context_files in modules.items():
-            mod_ctx = root / ".agent" / "modules" / name / "context"
+            mod_ctx = root / ".agents" / "modules" / name / "context"
             mod_ctx.mkdir(parents=True)
             for fname, content in context_files.items():
                 (mod_ctx / fname).write_text(content, encoding="utf-8")
 
 
 def test_compile_returns_empty_string_when_no_files(tmp_path):
-    (tmp_path / ".agent" / "modules").mkdir(parents=True)
+    (tmp_path / ".agents" / "modules").mkdir(parents=True)
     compiler = ContextCompiler(tmp_path)
     assert compiler.compile() == ""
 
@@ -60,8 +60,8 @@ def test_compile_includes_html_comment_headers(tmp_path):
 
 
 def test_compile_handles_missing_modules_dir_gracefully(tmp_path):
-    (tmp_path / ".agent" / "project").mkdir(parents=True)
-    (tmp_path / "agent.md").write_text("# Root\n", encoding="utf-8")
+    (tmp_path / ".agents" / "project").mkdir(parents=True)
+    (tmp_path / "agents.md").write_text("# Root\n", encoding="utf-8")
     # no modules dir at all
     result = ContextCompiler(tmp_path).compile()
     assert "Root" in result
@@ -83,7 +83,7 @@ def test_compile_includes_github_metadata(tmp_path):
 
 def test_compile_includes_module_capabilities(tmp_path):
     import yaml
-    mod_dir = tmp_path / ".agent" / "modules" / "flutter"
+    mod_dir = tmp_path / ".agents" / "modules" / "flutter"
     mod_dir.mkdir(parents=True)
     
     config = {

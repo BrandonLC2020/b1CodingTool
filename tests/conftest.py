@@ -53,16 +53,16 @@ def make_project(tmp_path):
         project_dir = tmp_path / "project"
         project_dir.mkdir(exist_ok=True)
 
-        # .agent/ structure
-        (project_dir / ".agent" / "project").mkdir(parents=True)
-        (project_dir / ".agent" / "modules").mkdir(parents=True)
+        # .agents/ structure
+        (project_dir / ".agents" / "project").mkdir(parents=True)
+        (project_dir / ".agents" / "modules").mkdir(parents=True)
 
-        # agent.md files
-        (project_dir / "agent.md").write_text(
+        # agents.md files
+        (project_dir / "agents.md").write_text(
             "# b1CodingTool: Global Context\nRoot agent context.\n",
             encoding="utf-8",
         )
-        (project_dir / ".agent" / "project" / "agent.md").write_text(
+        (project_dir / ".agents" / "project" / "agents.md").write_text(
             "# b1CodingTool: Project Context\nProject-specific context.\n",
             encoding="utf-8",
         )
@@ -72,14 +72,14 @@ def make_project(tmp_path):
             "upstream_repo": upstream_repo or "",
             "active_agents": agents or ["CLAUDE", "GEMINI", "CODEX"],
         }
-        (project_dir / ".agent" / "config.yaml").write_text(
+        (project_dir / ".agents" / "config.yaml").write_text(
             yaml.dump(config_data), encoding="utf-8"
         )
 
         # Install named modules
         if modules:
             for name in modules:
-                mod_dir = project_dir / ".agent" / "modules" / name
+                mod_dir = project_dir / ".agents" / "modules" / name
                 (mod_dir / "context").mkdir(parents=True)
                 (mod_dir / "b1-module.yaml").write_text(
                     yaml.dump({

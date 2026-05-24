@@ -26,7 +26,7 @@ def _make_module_source(base: Path, name="test-module", skills=None) -> Path:
 
 def _project(tmp_path: Path) -> Path:
     project = tmp_path / "project"
-    (project / ".agent" / "modules").mkdir(parents=True)
+    (project / ".agents" / "modules").mkdir(parents=True)
     return project
 
 
@@ -34,14 +34,14 @@ def test_install_copies_files_to_modules_dir(tmp_path):
     src = _make_module_source(tmp_path / "src")
     project = _project(tmp_path)
     ModuleInstaller(project).install(src)
-    assert (project / ".agent" / "modules" / "test-module").is_dir()
+    assert (project / ".agents" / "modules" / "test-module").is_dir()
 
 
 def test_install_preserves_context_files(tmp_path):
     src = _make_module_source(tmp_path / "src")
     project = _project(tmp_path)
     ModuleInstaller(project).install(src)
-    assert (project / ".agent" / "modules" / "test-module" / "context" / "best-practices.md").exists()
+    assert (project / ".agents" / "modules" / "test-module" / "context" / "best-practices.md").exists()
 
 
 def test_install_overwrites_existing_module(tmp_path):
@@ -52,7 +52,7 @@ def test_install_overwrites_existing_module(tmp_path):
     # Modify source and install again
     (src / "context" / "new-file.md").write_text("New file\n", encoding="utf-8")
     installer.install(src)
-    assert (project / ".agent" / "modules" / "test-module" / "context" / "new-file.md").exists()
+    assert (project / ".agents" / "modules" / "test-module" / "context" / "new-file.md").exists()
 
 
 def test_install_raises_when_no_yaml_found(tmp_path):
@@ -87,4 +87,4 @@ def test_install_continues_when_skill_command_fails(tmp_path):
         mock_run.side_effect = subprocess.CalledProcessError(1, "exit 1", stderr="error")
         # Should NOT raise — installation continues despite skill failure
         ModuleInstaller(project).install(src)
-    assert (project / ".agent" / "modules" / "test-module").is_dir()
+    assert (project / ".agents" / "modules" / "test-module").is_dir()

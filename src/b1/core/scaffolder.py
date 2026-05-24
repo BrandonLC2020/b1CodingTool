@@ -19,14 +19,14 @@ This project is managed by b1CodingTool.
 """
 
 def scaffold_project(root_dir: Path):
-    agent_dir = root_dir / ".agent"
+    agent_dir = root_dir / ".agents"
     docs_dir = root_dir / "docs"
     
     if not agent_dir.exists():
         agent_dir.mkdir(parents=True, exist_ok=True)
-        console.print("[green]Created .agent/ directory.[/green]")
+        console.print("[green]Created .agents/ directory.[/green]")
     else:
-        console.print("[dim].agent/ directory already exists.[/dim]")
+        console.print("[dim].agents/ directory already exists.[/dim]")
     
     if not docs_dir.exists():
         docs_dir.mkdir(parents=True, exist_ok=True)

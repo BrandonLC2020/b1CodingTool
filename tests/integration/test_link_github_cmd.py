@@ -48,7 +48,7 @@ def test_link_github_cmd_fallback_success(tmp_path):
             assert "Success" in result.stdout
             
             # Verify config
-            config_file = tmp_path / ".agent" / "config.yaml"
+            config_file = tmp_path / ".agents" / "config.yaml"
             assert config_file.exists()
             import yaml
             with open(config_file) as f:

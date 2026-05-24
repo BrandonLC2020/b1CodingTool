@@ -42,7 +42,7 @@ def b1_install(source: str, link: bool = False) -> str:
     :param link: Symlink the module instead of copying (useful for development).
     """
     project_dir = Path.cwd()
-    if not (project_dir / ".agent").exists():
+    if not (project_dir / ".agents").exists():
         return "Error: Not a b1CodingTool project. Run b1_init first."
         
     fetcher = ModuleFetcher()
@@ -58,10 +58,10 @@ def b1_install(source: str, link: bool = False) -> str:
 @mcp.tool()
 def b1_pair() -> str:
     """
-    Synchronizes the centralized agent.md context across agent-specific files (CLAUDE.md, GEMINI.md, CODEX.md).
+    Synchronizes the centralized agents.md context across agent-specific files (CLAUDE.md, GEMINI.md, AGENTS.md).
     """
     project_dir = Path.cwd()
-    if not (project_dir / ".agent").exists():
+    if not (project_dir / ".agents").exists():
         return "Error: Project not initialized. Run b1_init first."
         
     config = B1Config.load(project_dir)
@@ -113,10 +113,10 @@ def b1_pull() -> str:
     Syncs local modules with the upstream version control.
     """
     project_dir = Path.cwd()
-    if not (project_dir / ".agent").exists():
+    if not (project_dir / ".agents").exists():
         return "Error: Not a b1CodingTool project."
 
-    modules_dir = project_dir / ".agent" / "modules"
+    modules_dir = project_dir / ".agents" / "modules"
     if not modules_dir.exists():
         return "No modules currently installed in this project."
         
@@ -148,11 +148,11 @@ def b1_status() -> str:
     Returns a summary of installed modules and current context parity.
     """
     project_dir = Path.cwd()
-    if not (project_dir / ".agent").exists():
+    if not (project_dir / ".agents").exists():
         return json.dumps({"error": "Not a b1CodingTool project."})
         
     config = B1Config.load(project_dir)
-    modules_dir = project_dir / ".agent" / "modules"
+    modules_dir = project_dir / ".agents" / "modules"
     installed_modules = []
     if modules_dir.exists():
         installed_modules = [d.name for d in modules_dir.iterdir() if d.is_dir()]
@@ -169,7 +169,7 @@ def b1_status() -> str:
 @mcp.resource("b1://context/compiled")
 def get_compiled_context() -> str:
     """
-    Returns the fully merged content of the project-level agent.md and all active module context files.
+    Returns the fully merged content of the project-level agents.md and all active module context files.
     """
     project_dir = Path.cwd()
     config = B1Config.load(project_dir)
@@ -182,7 +182,7 @@ def get_project_config() -> str:
     Returns the project settings, linked integrations, and environment variables.
     """
     project_dir = Path.cwd()
-    config_path = project_dir / ".agent" / "config.yaml"
+    config_path = project_dir / ".agents" / "config.yaml"
     if config_path.exists():
         return config_path.read_text()
     return "{}"
@@ -193,7 +193,7 @@ def get_modules_library() -> str:
     Returns a list of installed modules and their basic info.
     """
     project_dir = Path.cwd()
-    modules_dir = project_dir / ".agent" / "modules"
+    modules_dir = project_dir / ".agents" / "modules"
     library = []
     if modules_dir.exists():
         for mod_dir in [d for d in modules_dir.iterdir() if d.is_dir()]:

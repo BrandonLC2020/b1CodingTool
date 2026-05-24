@@ -17,7 +17,7 @@ The system provides a CLI tool and a localized React dashboard to manage agent c
 1.  **The CLI Tool:** The primary interface for scaffolding, module management, and context synchronization, utilizing Typer for its command structure.
 2.  **The Module Registry:** A curated collection of guidelines, skills (including community skills from *skillsmp.com*), and hooks.
 3.  **The React Dashboard:** A local web UI for visualizing installed modules, managing API keys, monitoring agent usage sessions, and exploring available skills.
-4.  **Context Manager (`agent.md` system):** A hierarchical file management system that structures instructions for the AI agent, mapping standardized data to agent-specific formats.
+4.  **Context Manager (`agents.md` system):** A hierarchical file management system that structures instructions for the AI agent, mapping standardized data to agent-specific formats.
 
 ---
 
@@ -44,12 +44,12 @@ The Python CLI (managed via `uv`, built with Typer and Rich) will support the fo
 ### `b1 init`
 * **Purpose:** Bootstraps a new or existing project with the `b1CodingTool` architecture.
 * **Behavior:**
-    * Scaffolds the `.agent/` and `docs/` directories at the project root.
+    * Scaffolds the `.agents/` and `docs/` directories at the project root.
     * Generates a standardized `.gitignore` and `README.md` if they do not exist.
     * Establishes the hierarchical context structure:
-        * **Root `agent.md`:** Project-agnostic software development practices and general notes.
-        * **Project-Specific `project/agent.md`:** App logic, directory structures, and active tasks.
-    * *Constraint:* Must safely merge or append to existing `agent.md` files in pre-existing projects without destroying current data.
+        * **Root `agents.md`:** Project-agnostic software development practices and general notes.
+        * **Project-Specific `project/agents.md`:** App logic, directory structures, and active tasks.
+    * *Constraint:* Must safely merge or append to existing `agents.md` files in pre-existing projects without destroying current data.
 
 ### `b1 install <module-name>`
 * **Purpose:** Equips the current project workspace with a specific development or deployment module.
@@ -70,7 +70,7 @@ The Python CLI (managed via `uv`, built with Typer and Rich) will support the fo
 
 ### `b1 pair`
 * **Purpose:** Ensures cross-agent parity across the workspace.
-* **Behavior:** Reads the primary `agent.md` context files and translates/updates them into agent-specific configuration files (e.g., `CLAUDE.md`, `CODEX.md`, `GEMINI.md`). This guarantees that regardless of which assistant is being utilized, the core instructions and context remain uniform.
+* **Behavior:** Reads the primary `agents.md` context files and translates/updates them into agent-specific configuration files (e.g., `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`). This guarantees that regardless of which assistant is being utilized, the core instructions and context remain uniform.
 
 ---
 
@@ -90,17 +90,17 @@ The Python CLI (managed via `uv`, built with Typer and Rich) will support the fo
     * Initialize the Python project using `uv`.
     * Install **Typer** and **Rich** as core dependencies.
     * Implement the `b1 init` logic for new and existing directories using Typer commands.
-    * Establish the safe creation/merging of `.agent/`, `docs/`, and the layered `agent.md` files.
+    * Establish the safe creation/merging of `.agents/`, `docs/`, and the layered `agents.md` files.
 2.  **Phase 2: Module System & Sourcing**
     * Define the JSON/YAML schema for what constitutes a "Module".
-    * Implement the `b1 install` command to fetch and mount a module into the `.agent/` directory, using Rich for UI feedback.
+    * Implement the `b1 install` command to fetch and mount a module into the `.agents/` directory, using Rich for UI feedback.
     * Implement the connection to *skillsmp.com* to parse and inject community skills.
 3.  **Phase 3: Version Control Syncing**
     * Implement `b1 pull` to update module definitions.
     * Implement `b1 push` utilizing a git library to automate PR creation for generalized rules.
 4.  **Phase 4: Cross-Agent Parity Management**
     * Implement the `b1 pair` command.
-    * Develop the parsing and translation logic to update all agent-specific files (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`) from the root `AGENT.md` guidelines.
+    * Develop the parsing and translation logic to update all agent-specific files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) from the root `agents.md` guidelines.
 5.  **Phase 5: Dashboard Integration**
     * Scaffold the React frontend.
     * Build a local FastAPI or standard Python HTTP server within the CLI to serve data (installed modules, API usage) to the React frontend.

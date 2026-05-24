@@ -29,7 +29,7 @@ def test_install_copies_module_to_agent_modules(tmp_path, monkeypatch, make_proj
         result = runner.invoke(app, ["install", str(src)])
 
     assert result.exit_code == 0
-    assert (project / ".agent" / "modules" / "django").is_dir()
+    assert (project / ".agents" / "modules" / "django").is_dir()
 
 
 def test_install_preserves_context_files(tmp_path, monkeypatch, make_project):
@@ -41,7 +41,7 @@ def test_install_preserves_context_files(tmp_path, monkeypatch, make_project):
         MockFetcher.return_value.fetch.return_value = src
         runner.invoke(app, ["install", str(src)])
 
-    assert (project / ".agent" / "modules" / "django" / "context" / "best-practices.md").exists()
+    assert (project / ".agents" / "modules" / "django" / "context" / "best-practices.md").exists()
 
 
 def test_install_exits_with_error_outside_initialized_project(tmp_path, monkeypatch):
@@ -60,7 +60,7 @@ def test_install_link_creates_symlink(tmp_path, monkeypatch, make_project):
         result = runner.invoke(app, ["install", str(src), "--link"])
 
     assert result.exit_code == 0
-    target = project / ".agent" / "modules" / "django"
+    target = project / ".agents" / "modules" / "django"
     assert target.is_symlink()
     assert target.resolve() == src.resolve()
 

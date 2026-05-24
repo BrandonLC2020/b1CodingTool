@@ -15,7 +15,7 @@ def pair_cmd():
     Ensures cross-agent parity across the workspace by translating root settings.
     """
     project_dir = Path.cwd()
-    if not (project_dir / ".agent").exists():
+    if not (project_dir / ".agents").exists():
         console.print("[bold red]Project not initialized. Run b1 init.[/bold red]")
         raise typer.Exit(1)
         

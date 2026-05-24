@@ -16,7 +16,7 @@ class HookEngine:
     
     def __init__(self, project_dir: Path):
         self.project_dir = project_dir
-        self.modules_dir = self.project_dir / ".agent" / "modules"
+        self.modules_dir = self.project_dir / ".agents" / "modules"
 
     def run_hooks(self, hook_name: str, target_module: Optional[str] = None):
         """

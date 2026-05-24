@@ -10,7 +10,7 @@ def test_init_creates_agent_directory(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     result = runner.invoke(app, ["init"])
     assert result.exit_code == 0
-    assert (tmp_path / ".agent").is_dir()
+    assert (tmp_path / ".agents").is_dir()
 
 
 def test_init_creates_docs_directory(tmp_path, monkeypatch):
@@ -22,13 +22,13 @@ def test_init_creates_docs_directory(tmp_path, monkeypatch):
 def test_init_creates_agent_md(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     runner.invoke(app, ["init"])
-    assert (tmp_path / "agent.md").exists()
+    assert (tmp_path / "agents.md").exists()
 
 
 def test_init_creates_project_agent_md(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     runner.invoke(app, ["init"])
-    assert (tmp_path / ".agent" / "project" / "agent.md").exists()
+    assert (tmp_path / ".agents" / "project" / "agents.md").exists()
 
 
 def test_init_creates_gitignore(tmp_path, monkeypatch):
@@ -57,7 +57,7 @@ def test_init_with_path_argument_creates_subdirectory(tmp_path, monkeypatch):
     target.mkdir()
     result = runner.invoke(app, ["init", str(target)])
     assert result.exit_code == 0
-    assert (target / ".agent").is_dir()
+    assert (target / ".agents").is_dir()
 
 
 def test_init_creates_directory_if_it_does_not_exist(tmp_path, monkeypatch):

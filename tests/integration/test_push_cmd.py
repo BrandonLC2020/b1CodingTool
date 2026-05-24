@@ -37,13 +37,13 @@ def test_push_creates_branch_with_correct_prefix(make_project, monkeypatch):
     monkeypatch.chdir(project)
 
     # status --porcelain returns staged files (non-empty → proceed with commit)
-    status_mock = MagicMock(stdout=".agent/config.yaml M\n", returncode=0)
+    status_mock = MagicMock(stdout=".agents/config.yaml M\n", returncode=0)
 
     with patch(_MOCK_WHICH, return_value="/usr/bin/gh"):
         with patch(_MOCK_RUN) as mock_run:
             mock_run.side_effect = [
                 _successful_run(),           # git checkout -b
-                _successful_run(),           # git add .agent/
+                _successful_run(),           # git add .agents/
                 status_mock,                 # git status --porcelain
                 _successful_run(),           # git commit
                 _successful_run(),           # git push
@@ -61,7 +61,7 @@ def test_push_extracts_rules_and_stages_selectively(make_project, monkeypatch):
     monkeypatch.chdir(project)
     
     # Add a project agent file with generalized rules
-    project_agent = project / ".agent" / "project" / "agent.md"
+    project_agent = project / ".agents" / "project" / "agents.md"
     project_agent.parent.mkdir(parents=True, exist_ok=True)
     project_agent.write_text("""
 # Project Context
@@ -72,14 +72,14 @@ General rule.
 """, encoding="utf-8")
 
     # status --porcelain returns staged files
-    status_mock = MagicMock(stdout="M agent.md\n?? .agent/learnings.md\n", returncode=0)
+    status_mock = MagicMock(stdout="M agents.md\n?? .agents/learnings.md\n", returncode=0)
 
     with patch(_MOCK_WHICH, return_value="/usr/bin/gh"):
         with patch(_MOCK_RUN) as mock_run:
             mock_run.side_effect = [
                 _successful_run(),           # git checkout -b
-                _successful_run(),           # git add agent.md
-                _successful_run(),           # git add .agent/learnings.md
+                _successful_run(),           # git add agents.md
+                _successful_run(),           # git add .agents/learnings.md
                 status_mock,                 # git status --porcelain
                 _successful_run(),           # git commit
                 _successful_run(),           # git push
@@ -89,14 +89,14 @@ General rule.
 
     # Verify selective git add calls
     add_calls = [c[0][0] for c in mock_run.call_args_list if c[0][0][0:2] == ["git", "add"]]
-    assert ["git", "add", "agent.md"] in add_calls
-    assert ["git", "add", ".agent/learnings.md"] in add_calls
-    # Ensure it did NOT add the whole .agent/ dir
-    assert ["git", "add", ".agent/"] not in add_calls
+    assert ["git", "add", "agents.md"] in add_calls
+    assert ["git", "add", ".agents/learnings.md"] in add_calls
+    # Ensure it did NOT add the whole .agents/ dir
+    assert ["git", "add", ".agents/"] not in add_calls
     
     # Verify learnings.md was created
-    assert (project / ".agent" / "learnings.md").exists()
-    assert "Rule 1" in (project / ".agent" / "learnings.md").read_text()
+    assert (project / ".agents" / "learnings.md").exists()
+    assert "Rule 1" in (project / ".agents" / "learnings.md").read_text()
 
 
 def test_push_returns_cleanly_when_no_changes_to_stage(make_project, monkeypatch):
