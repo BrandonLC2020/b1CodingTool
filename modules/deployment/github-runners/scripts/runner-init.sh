@@ -5,17 +5,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$(dirname "$SCRIPT_DIR")/templates"
 TARGET_BASE="${PWD}/infrastructure/runners"
 
+force=false
+if [[ "${1:-}" == "--force" ]]; then
+    force=true
+fi
+
 echo "=== Self-Hosted Runner Setup ==="
 echo "Select deployment style:"
 echo "  1) systemd unit (long-lived runner on a Linux host)"
 echo "  2) docker-compose (containerized runner, ephemeral)"
 echo "  3) ephemeral workflow example (just-in-time runners)"
 read -p "Selection (1, 2, or 3): " CHOICE
-
-force=false
-if [[ "${1:-}" == "--force" ]]; then
-    force=true
-fi
 
 copy_template() {
     local src="$1"
