@@ -1,0 +1,22 @@
+[Unit]
+Description=GitHub Actions Self-Hosted Runner
+After=network.target
+
+[Service]
+Type=simple
+User={{RUNNER_USER}}
+WorkingDirectory=/home/{{RUNNER_USER}}/actions-runner
+ExecStart=/home/{{RUNNER_USER}}/actions-runner/run.sh
+Restart=on-failure
+RestartSec=15
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/{{RUNNER_USER}}/actions-runner
+# Resource limits
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

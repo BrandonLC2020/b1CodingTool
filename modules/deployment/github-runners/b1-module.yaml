@@ -1,0 +1,20 @@
+name: github-runners
+version: 1.0.0
+type: deployment
+description: "Self-hosted GitHub Actions runner setup, security hardening, ephemeral patterns, and autoscaling guidance."
+skills:
+  - name: "Runner Setup Advisor"
+    description: "Generates systemd, Docker, or Kubernetes manifests for self-hosted runners."
+  - name: "Runner Security Auditor"
+    description: "Audits runner deployments for isolation, ephemeral lifecycle, and least-privilege token usage."
+  - name: "Autoscaling Configurator"
+    description: "Recommends scaling strategies (ARC, philips-labs/terraform-aws-github-runner, etc.)."
+commands:
+  - name: "/gh-runners init"
+    description: "Scaffold a self-hosted runner deployment (systemd / docker-compose / ephemeral workflow)."
+  - name: "/gh-runners audit"
+    description: "Audit existing runner configuration for security and isolation issues."
+  - name: "/gh-runners scale-advice"
+    description: "Recommend an autoscaling approach based on the project's workflow profile."
+hooks:
+  post-install: "scripts/post-install.sh"

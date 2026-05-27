@@ -1,0 +1,18 @@
+# Containerized self-hosted runner. Set RUNNER_TOKEN, REPO_URL, RUNNER_NAME in env.
+# Uses myoung34/github-runner — pin to a specific tag in production.
+services:
+  runner:
+    image: myoung34/github-runner:ubuntu-jammy
+    container_name: ${RUNNER_NAME:-github-runner}
+    restart: unless-stopped
+    environment:
+      RUNNER_NAME: ${RUNNER_NAME:-github-runner}
+      RUNNER_TOKEN: ${RUNNER_TOKEN}
+      REPO_URL: ${REPO_URL}
+      LABELS: self-hosted,linux,docker,untrusted
+      EPHEMERAL: "true"
+      DISABLE_AUTO_UPDATE: "false"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    security_opt:
+      - no-new-privileges:true
