@@ -1,0 +1,29 @@
+version: 2
+updates:
+  # Python (uv / pip). Adjust directory if pyproject.toml lives elsewhere.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      python-patches:
+        update-types: ["patch"]
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+
+  # Docker base images
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+
+  # Uncomment if you have a Node/JS package:
+  # - package-ecosystem: "npm"
+  #   directory: "/dashboard"
+  #   schedule:
+  #     interval: "weekly"

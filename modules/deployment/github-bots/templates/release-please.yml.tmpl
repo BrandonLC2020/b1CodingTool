@@ -1,0 +1,22 @@
+# Drives semver releases from conventional commits.
+# See https://github.com/googleapis/release-please for config options.
+name: release-please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          # Pin to a SHA in production for supply-chain safety.
+          release-type: python
+          # config-file: release-please-config.json
+          # manifest-file: .release-please-manifest.json

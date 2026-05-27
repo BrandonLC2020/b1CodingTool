@@ -1,0 +1,20 @@
+name: github-bots
+version: 1.0.0
+type: deployment
+description: "Standards and scaffolding for GitHub App / bot account automation: Dependabot, release-please, triage labelers."
+skills:
+  - name: "Bot Setup Advisor"
+    description: "Recommends GitHub App vs PAT, least-privilege scopes, and audit-log expectations."
+  - name: "Dependabot Configurator"
+    description: "Generates a dependabot.yml tuned to the project's package ecosystems and cadence."
+  - name: "Triage Bot Generator"
+    description: "Generates labeler and triage workflows from a declared label taxonomy."
+commands:
+  - name: "/gh-bots init"
+    description: "Interactively scaffold bot automation (dependabot, release-please, triage)."
+  - name: "/gh-bots dependabot"
+    description: "Generate a dependabot.yml after detecting the project's package managers."
+  - name: "/gh-bots triage"
+    description: "Generate a triage/labeler workflow from a label taxonomy."
+hooks:
+  post-install: "scripts/post-install.sh"
