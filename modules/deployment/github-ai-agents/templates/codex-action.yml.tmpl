@@ -1,0 +1,31 @@
+# Generic agent workflow — adapt the `uses:` to your chosen agent action.
+# Requires repo secret: OPENAI_API_KEY (or equivalent)
+name: codex-agent
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: codex-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  codex:
+    if: contains(github.event.comment.body, '/codex')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Codex agent
+        # Replace with the actual action for your chosen agent.
+        run: |
+          echo "Wire your agent invocation here."
+          echo "API key available via OPENAI_API_KEY secret."
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

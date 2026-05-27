@@ -1,0 +1,25 @@
+# Agent Permissions Policy
+
+This document records which AI agents this repository invites, the GitHub permissions they hold, and the rationale.
+
+## Agents
+
+### claude-code (Anthropic)
+- **Trigger:** `@claude` mention in issues or PR comments.
+- **Permissions:** `contents: read`, `pull-requests: write`, `issues: write`.
+- **Secrets used:** `ANTHROPIC_API_KEY`.
+- **Rationale:** Enables Claude to read repo state and comment on issues/PRs. No write access to `contents:` — Claude cannot push directly.
+
+### codex / generic agent
+- **Trigger:** `/codex` comment.
+- **Permissions:** `contents: read`, `pull-requests: write`, `issues: write`.
+- **Secrets used:** `OPENAI_API_KEY` (or equivalent).
+- **Rationale:** Read-only repo access plus issue/PR commenting.
+
+### agent-pr-review
+- **Trigger:** `agent:review` label applied to a PR.
+- **Permissions:** `contents: read`, `pull-requests: write`.
+- **Rationale:** Posts review comments only; cannot push or merge.
+
+## Review Cadence
+This file should be reviewed quarterly, or whenever an agent's permissions block is changed.

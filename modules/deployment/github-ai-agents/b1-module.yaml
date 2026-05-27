@@ -1,0 +1,20 @@
+name: github-ai-agents
+version: 1.0.0
+type: deployment
+description: "Standards and scaffolding for AI coding agents (Claude Code, Codex, Copilot) acting through GitHub Actions and PRs."
+skills:
+  - name: "Agent Workflow Generator"
+    description: "Generates workflow files that run AI agents (Claude Code Action, Codex, etc.) on issues, PRs, or @mentions."
+  - name: "Agent Permission Auditor"
+    description: "Audits workflows that grant tokens to AI agents for least-privilege and secret hygiene."
+  - name: "Prompt File Manager"
+    description: "Manages reusable prompt files under .github/agents/ and references them from workflows."
+commands:
+  - name: "/gh-agents init"
+    description: "Interactively scaffold one or more AI agent workflows into .github/workflows/."
+  - name: "/gh-agents add-claude"
+    description: "Add a Claude Code Action workflow with a sensible default permissions block."
+  - name: "/gh-agents audit-permissions"
+    description: "Audit agent workflows for over-broad permissions or unsafe secret exposure."
+hooks:
+  post-install: "scripts/post-install.sh"
